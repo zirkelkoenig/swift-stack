@@ -1,0 +1,25 @@
+TGM-style Tetris game
+
+Playfield: 10x20 squares
+Pieces:
+
+	      X      X  XX   XX   X   XX
+	XXXX  XXX  XXX  XX  XX   XXX   XX
+
+Game Speed: 62,5 ticks/second (16 ms)
+Default Gravity: 32 ticks (~2 lines/second)
+Inputs QWERTY-Keyboard:
+
+	E - 1 col left
+	F - 1 col right
+	D - drop
+
+	J - turn left
+	I - turn right
+	L - turn left
+
+Grid Layout:
+
+	1 box = 10x10 pixels
+	11 vertical lines: (10 * 10) + 11 = 111
+	21 horizontal lines: (20 * 10) + 21 = 221
