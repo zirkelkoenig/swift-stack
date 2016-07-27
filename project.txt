@@ -3,8 +3,10 @@ TGM-style Tetris game
 Playfield: 10x20 squares
 Pieces:
 
-	      X      X  XX   XX   X   XX
-	XXXX  XXX  XXX  XX  XX   XXX   XX
+	      XXX  XXX  XX   XX   X   XX
+	XXXX  X      X  XX  XX   XXX   XX
+	|red       |blue    |pink     |green
+	      |orange   |yellow  |turquoise
 
 Game Speed: 62,5 ticks/second (16 ms)
 Default Gravity: 32 ticks (~2 lines/second)
