@@ -46,10 +46,12 @@ Piece* activePiece;
 // Functions
 int init();
 
-int getFieldNum(ICoord square);
+int getFieldIndex(ICoord square);
 
-Piece* nextPiece();
+void nextPiece();
 
-void move(Piece* piece, int x, int y);
+void move(int x, int y);
+
+void lock();
 
 #endif

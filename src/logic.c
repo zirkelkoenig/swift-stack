@@ -14,7 +14,7 @@ int init()
 		int j = 0;
 		for(j = 0; j < FIELD_HEIGHT; j++) {
 			ICoord current = {i, j};
-			playfield[getFieldNum(current)] = EMPTY;
+			playfield[getFieldIndex(current)] = EMPTY;
 		}
 	}
 
@@ -77,12 +77,12 @@ int init()
 	return 0;
 }
 
-int getFieldNum(ICoord square)
+int getFieldIndex(ICoord square)
 {
 	return square.x + (square.y * FIELD_WIDTH);
 }
 
-Piece* nextPiece()
+void nextPiece()
 {
 	int result = EMPTY;
 	int triesLeft = RAND_TRIES;
@@ -107,14 +107,13 @@ Piece* nextPiece()
 	}
 	pieceHistory[0] = result;
 
-	Piece* piece = malloc(sizeof(Piece));
-	memcpy(piece, &prototypes[result], sizeof(Piece));
-	return piece;
+	activePiece = malloc(sizeof(Piece));
+	memcpy(activePiece, &prototypes[result], sizeof(Piece));
 }
 
-void move(Piece* piece, int x, int y)
+void move(int x, int y)
 {
-	ICoord newPos = ICoord_shift(piece->position, x, y);
+	ICoord newPos = ICoord_shift(activePiece->position, x, y);
 
 	if(newPos.x < 0) {
 		newPos.x = 0;
@@ -122,8 +121,8 @@ void move(Piece* piece, int x, int y)
 		int i = 0;
 		int offset = 0;
 		for(i = 0; i < 4; i++) {
-			if(piece->squares[i].x > offset) {
-				offset = piece->squares[i].x;
+			if(activePiece->squares[i].x > offset) {
+				offset = activePiece->squares[i].x;
 			}
 		}
 		if((newPos.x + offset) >= FIELD_WIDTH) {
@@ -137,5 +136,18 @@ void move(Piece* piece, int x, int y)
 		newPos.y = FIELD_HEIGHT - 1;
 	}
 
-	piece->position = newPos;
+	activePiece->position = newPos;
+}
+
+void lock()
+{
+	int i = 0;
+	for(i = 0; i < 4; i++) {
+		ICoord square = ICoord_shift(activePiece->squares[i], activePiece->position.x, activePiece->position.y);
+		int index = getFieldIndex(square);
+		playfield[index] = activePiece->color;
+	}
+
+	free(activePiece);
+	activePiece = NULL;
 }
