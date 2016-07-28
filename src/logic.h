@@ -16,7 +16,8 @@ typedef enum Square {
 	PINK,
 	TURQUOISE,
 	GREEN,
-	EMPTY
+	EMPTY,
+	DESTROYED
 } Square;
 
 typedef enum Orientation {
@@ -26,13 +27,6 @@ typedef enum Orientation {
 	WEST,
 	NONE
 } Orientation;
-
-typedef enum Phase {
-	INIT,
-	DROP,
-	LOCK,
-	CLEAR
-} Phase;
 
 typedef struct Piece {
 	Square color;
@@ -52,8 +46,9 @@ int init();
 /* Returns the index in the playfield array for a given position. */
 int getFieldIndex(ICoord square);
 
-/* Pseudo-randomly generates the next piece and sets it as active */
-void nextPiece();
+/* Pseudo-randomly generates and spawns the next piece. Returns 0 when placement failes due to collisions (= game
+over) */
+int nextPiece();
 
 /* Marks the active piece's current position on the playfield, then destroys it and frees its resources */
 void lock();
@@ -71,5 +66,14 @@ void rotateLeft();
 
 /* Rotates the piece by -90 degrees if possible. */
 void rotateRight();
+
+/* Destroys the playfield and frees all resources. */
+void destroy();
+
+/* Marks completed lines that are about to be destroyed. */
+void markLines();
+
+/* Clears all previously marked lines and returns their quantity */
+int clearLines();
 
 #endif

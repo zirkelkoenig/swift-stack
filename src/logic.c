@@ -54,7 +54,7 @@ int getFieldIndex(ICoord square)
 	return square.x + (square.y * FIELD_WIDTH);
 }
 
-void nextPiece()
+int nextPiece()
 {
 	int result = EMPTY;
 	int triesLeft = RAND_TRIES;
@@ -79,6 +79,12 @@ void nextPiece()
 	activePiece->color = result;
 	activePiece->orientation = NORTH;
 	activePiece->position = proto[result];
+
+	if(checkCollision(activePiece->position)) {
+		return 0;
+	} else {
+		return 1;
+	}
 }
 
 void lock()
@@ -180,4 +186,65 @@ void rotateLeft()
 	if(!checkCollision(activePiece->position)) {
 		activePiece->orientation = newOrientation;
 	}
+}
+
+void destroy()
+{
+	if(activePiece) {
+		free(activePiece);
+	}
+
+	free(playfield);
+	free(history);
+	free(proto);
+
+	CoordMap_destroy();
+}
+
+void markLines()
+{
+	int i = 0;
+	int j = 0;
+	int index = 0;
+	int complete = 1;
+
+	for(i = 0; i < FIELD_HEIGHT; i++) {
+		complete = 1;
+
+		for(j = 0; j < FIELD_WIDTH; j++) {
+			index = (i * FIELD_WIDTH) + j;
+			if(playfield[j] == EMPTY) {
+				complete = 0;
+				break;
+			}
+		}
+
+		if(complete) {
+			for(j = 0; j < FIELD_WIDTH; j++) {
+				index = (i * FIELD_WIDTH) + j;
+				playfield[index] = DESTROYED;
+			}
+		}
+	}
+}
+
+int clearLines()
+{
+	int i = 0;
+	int j = 0;
+	int lineIndex = 0;
+	int counter = 0;
+
+	for(i = 0; i < FIELD_HEIGHT; i++) {
+		lineIndex = i * FIELD_WIDTH;
+		if(playfield[lineIndex] == DESTROYED) {
+			memmove(&playfield[lineIndex], &playfield[lineIndex + FIELD_WIDTH],
+					(FIELD_WIDTH * FIELD_HEIGHT) - lineIndex);
+			for(j = 0; j < FIELD_WIDTH; j++) {
+				playField[(FIELD_WIDTH * (FIELD_HEIGHT - 1)) + j] = EMPTY;
+			}
+			counter++;
+		}
+	}
+	return counter;
 }
