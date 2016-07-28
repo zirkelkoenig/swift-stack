@@ -2,6 +2,7 @@
 #include <string.h>
 #include <time.h>
 #include "logic.h"
+#include "coord_map.h"
 
 int checkCollision(ICoord newPosition);
 
@@ -44,7 +45,6 @@ int init()
 	memcpy(proto, &protoInit, EMPTY * sizeof(ICoord));
 
 	activePiece = NULL;
-	fieldState = INIT;
 	CoordMap_init();
 	return 0;
 }
@@ -93,7 +93,7 @@ void lock()
 	for(i = 0; i < 4; i++) {
 		ICoord current = CoordMap_get(activePiece->color, activePiece->orientation, i);
 		int index = getFieldIndex(ICoord_shift(current, activePiece->position.x, activePiece->position.y));
-		playfield[index] = current->color;
+		playfield[index] = activePiece->color;
 	}
 
 	free(activePiece);
@@ -201,12 +201,13 @@ void destroy()
 	CoordMap_destroy();
 }
 
-void markLines()
+int markLines()
 {
 	int i = 0;
 	int j = 0;
 	int index = 0;
 	int complete = 1;
+	int counter = 0;
 
 	for(i = 0; i < FIELD_HEIGHT; i++) {
 		complete = 1;
@@ -224,8 +225,10 @@ void markLines()
 				index = (i * FIELD_WIDTH) + j;
 				playfield[index] = DESTROYED;
 			}
+			counter++;
 		}
 	}
+	return counter;
 }
 
 int clearLines()
@@ -241,7 +244,7 @@ int clearLines()
 			memmove(&playfield[lineIndex], &playfield[lineIndex + FIELD_WIDTH],
 					(FIELD_WIDTH * FIELD_HEIGHT) - lineIndex);
 			for(j = 0; j < FIELD_WIDTH; j++) {
-				playField[(FIELD_WIDTH * (FIELD_HEIGHT - 1)) + j] = EMPTY;
+				playfield[(FIELD_WIDTH * (FIELD_HEIGHT - 1)) + j] = EMPTY;
 			}
 			counter++;
 		}

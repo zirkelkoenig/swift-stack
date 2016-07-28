@@ -38,8 +38,6 @@ Square* playfield;
 
 Piece* activePiece;
 
-Phase fieldState;
-
 /* Initializes the playfield and all globals. Sets the playfield's state to INIT. */
 int init();
 
@@ -70,8 +68,8 @@ void rotateRight();
 /* Destroys the playfield and frees all resources. */
 void destroy();
 
-/* Marks completed lines that are about to be destroyed. */
-void markLines();
+/* Marks completed lines that are about to be destroyed and returns their quantity. */
+int markLines();
 
 /* Clears all previously marked lines and returns their quantity */
 int clearLines();
