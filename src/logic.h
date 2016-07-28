@@ -8,7 +8,6 @@
 #define RAND_TRIES 4
 #define HISTORY 4
 
-// Types
 typedef enum Square {
 	RED,
 	ORANGE,
@@ -27,6 +26,13 @@ typedef enum Orientation {
 	WEST
 } Orientation;
 
+typedef enum Phase {
+	INIT,
+	DROP,
+	LOCK,
+	CLEAR
+} Phase;
+
 typedef struct Piece {
 	Square color;
 	ICoord position;
@@ -34,7 +40,6 @@ typedef struct Piece {
 	ICoord squares[4];
 } Piece;
 
-// Globals
 Square* playfield;
 
 Square* pieceHistory;
@@ -43,15 +48,26 @@ Piece* prototypes;
 
 Piece* activePiece;
 
-// Functions
+Phase fieldState;
+
+/* Initializes the playfield and all globals. Sets the playfield's state to INIT. */
 int init();
 
+/* Returns the index in the playfield array for a given position. */
 int getFieldIndex(ICoord square);
 
+/* Pseudo-randomly generates the next piece and sets it as active */
 void nextPiece();
 
+/* Marks the piece's current position on the playfield, then destroys the piece and frees its resources */
 void lock();
 
-void moveHorizontal(int x);
+/* Moves the active piece along the horizontal axis by x columns. Breaks and returns 1 once the piece becomes
+blocked. */
+int moveHorizontal(int x);
+
+/* Moves the active piece along the vertical axis by negative y lines. Positive values for y are ignored. Breaks and
+returns 1 once the piece becomes blocked. */
+int moveDown(int y);
 
 #endif
