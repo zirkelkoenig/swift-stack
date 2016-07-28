@@ -111,34 +111,6 @@ void nextPiece()
 	memcpy(activePiece, &prototypes[result], sizeof(Piece));
 }
 
-void move(int x, int y)
-{
-	ICoord newPos = ICoord_shift(activePiece->position, x, y);
-
-	if(newPos.x < 0) {
-		newPos.x = 0;
-	} else {
-		int i = 0;
-		int offset = 0;
-		for(i = 0; i < 4; i++) {
-			if(activePiece->squares[i].x > offset) {
-				offset = activePiece->squares[i].x;
-			}
-		}
-		if((newPos.x + offset) >= FIELD_WIDTH) {
-			newPos.x = FIELD_WIDTH - 1 - offset;
-		}
-	}
-
-	if(newPos.y < 0) {
-		newPos.y = 0;
-	} else if(newPos.y >= FIELD_HEIGHT) {
-		newPos.y = FIELD_HEIGHT - 1;
-	}
-
-	activePiece->position = newPos;
-}
-
 void lock()
 {
 	int i = 0;
@@ -150,4 +122,34 @@ void lock()
 
 	free(activePiece);
 	activePiece = NULL;
+}
+
+void moveHorizontal(int x)
+{
+	int direction = x >= 0 ? 1 : -1;
+	int i = 0;
+	for(i = 0; i != x; i += direction) {
+		ICoord newPos = ICoord_shift(activePiece->position, direction, 0);
+
+		int j = 0;
+		int valid = 1;
+		for(j = 0; j < 4; j++) {
+			ICoord curSquare = ICoord_shift(activePiece->squares[j], newPos.x, newPos.y);
+
+			if((curSquare.x < 0) || (curSquare.x >= FIELD_WIDTH)) {
+				valid = 0;
+				break;
+			}
+
+			int index = getFieldIndex(curSquare);
+			if(playfield[index] != EMPTY) {
+				valid = 0;
+				break;
+			}
+		}
+
+		if(valid) {
+			activePiece->position = newPos;
+		}
+	}
 }

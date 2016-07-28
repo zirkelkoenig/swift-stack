@@ -50,8 +50,8 @@ int getFieldIndex(ICoord square);
 
 void nextPiece();
 
-void move(int x, int y);
-
 void lock();
+
+void moveHorizontal(int x);
 
 #endif
