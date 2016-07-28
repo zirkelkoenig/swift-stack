@@ -66,7 +66,10 @@ int moveHorizontal(int x);
 returns 1 once the piece becomes blocked. */
 int moveDown(int y);
 
-/* Rotates the piece by 90 degrees, kicking it off walls or other pieces if possible. */
+/* Rotates the piece by 90 degrees if possible. */
 void rotateLeft();
+
+/* Rotates the piece by -90 degrees if possible. */
+void rotateRight();
 
 #endif

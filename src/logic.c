@@ -161,3 +161,23 @@ int checkCollision(ICoord newPosition)
 	}
 	return 0;
 }
+
+void rotateRight()
+{
+	Orientation newOrientation = (activePiece->orientation + 1) % NONE;
+	if(!checkCollision(activePiece->position)) {
+		activePiece->orientation = newOrientation;
+	}
+}
+
+void rotateLeft()
+{
+	Orientation newOrientation = activePiece->orientation - 1;
+	if(newOrientation < 0) {
+		newOrientation += NONE;
+	}
+
+	if(!checkCollision(activePiece->position)) {
+		activePiece->orientation = newOrientation;
+	}
+}
