@@ -23,7 +23,8 @@ typedef enum Orientation {
 	NORTH,
 	EAST,
 	SOUTH,
-	WEST
+	WEST,
+	NONE
 } Orientation;
 
 typedef enum Phase {
@@ -35,16 +36,11 @@ typedef enum Phase {
 
 typedef struct Piece {
 	Square color;
-	ICoord position;
 	Orientation orientation;
-	ICoord squares[4];
+	ICoord position;
 } Piece;
 
 Square* playfield;
-
-Square* pieceHistory;
-
-Piece* prototypes;
 
 Piece* activePiece;
 
@@ -59,7 +55,7 @@ int getFieldIndex(ICoord square);
 /* Pseudo-randomly generates the next piece and sets it as active */
 void nextPiece();
 
-/* Marks the piece's current position on the playfield, then destroys the piece and frees its resources */
+/* Marks the active piece's current position on the playfield, then destroys it and frees its resources */
 void lock();
 
 /* Moves the active piece along the horizontal axis by x columns. Breaks and returns 1 once the piece becomes
@@ -69,5 +65,8 @@ int moveHorizontal(int x);
 /* Moves the active piece along the vertical axis by negative y lines. Positive values for y are ignored. Breaks and
 returns 1 once the piece becomes blocked. */
 int moveDown(int y);
+
+/* Rotates the piece by 90 degrees, kicking it off walls or other pieces if possible. */
+void rotateLeft();
 
 #endif

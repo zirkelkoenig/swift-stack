@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include "math_data.h"
 
-#define PI 3.14159265
-
 ICoord ICoord_shift(ICoord coord, int x, int y)
 {
 	ICoord result = {

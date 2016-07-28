@@ -1,6 +1,8 @@
 #ifndef _math_data_h
 #define _math_data_h
 
+#define PI 3.14159265
+
 typedef struct ICoord {
 	int x;
 	int y;

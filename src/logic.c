@@ -3,13 +3,18 @@
 #include <time.h>
 #include "logic.h"
 
+int checkCollision(ICoord newPosition);
+
+Square* history;
+
+ICoord* proto;
+
 int init()
 {
 	int i = 0;
 
 	// setup playfield
 	playfield = calloc(FIELD_WIDTH * FIELD_HEIGHT, sizeof(Square));
-
 	for(i = 0; i < FIELD_WIDTH; i++) {
 		int j = 0;
 		for(j = 0; j < FIELD_HEIGHT; j++) {
@@ -20,61 +25,27 @@ int init()
 
 	// setup randomizer
 	srand(time(NULL));
-	pieceHistory = calloc(HISTORY, sizeof(Square));
+	history = calloc(HISTORY, sizeof(Square));
 	for(i = 0; i < HISTORY; i++) {
-		pieceHistory[i] = EMPTY;
+		history[i] = EMPTY;
 	}
 
 	// setup prototypes
-	prototypes = calloc(EMPTY, sizeof(Piece));
-
-	Square color[EMPTY] = {
-		RED,
-		ORANGE,
-		BLUE,
-		YELLOW,
-		PINK,
-		TURQUOISE,
-		GREEN
+	ICoord protoInit[EMPTY] = {
+		{3, 17},
+		{3, 18},
+		{3, 18},
+		{4, 18},
+		{3, 18},
+		{3, 18},
+		{3, 18}
 	};
-	ICoord position[EMPTY] = {
-		{3, 19},
-		{4, 19},
-		{3, 19},
-		{4, 19},
-		{3, 19},
-		{3, 19},
-		{4, 19}
-	};
-	int orientation[EMPTY] = {
-		NORTH,
-		NORTH,
-		NORTH,
-		NORTH,
-		NORTH,
-		NORTH,
-		NORTH
-	};
-	ICoord squares[EMPTY][4] = {
-		{{0, 0}, {1, 0}, {2, 0}, {3, 0}},
-		{{0, 0}, {0, 1}, {1, 1}, {2, 1}},
-		{{0, 1}, {1, 1}, {2, 0}, {2, 1}},
-		{{0, 0}, {0, 1}, {1, 0}, {1, 1}},
-		{{0, 0}, {1, 0}, {1, 1}, {2, 1}},
-		{{0, 0}, {1, 0}, {1, 1}, {2, 0}},
-		{{0, 1}, {1, 0}, {1, 1}, {2, 0}}
-	};
-
-	for(i = 0; i < EMPTY; i++) {
-		prototypes[i].color = color[i];
-		prototypes[i].position = position[i];
-		prototypes[i].orientation = orientation[i];
-
-		memcpy(&prototypes[i].squares, &squares[i], 4 * sizeof(ICoord));
-	}
+	proto = calloc(EMPTY, sizeof(ICoord));
+	memcpy(proto, &protoInit, EMPTY * sizeof(ICoord));
 
 	activePiece = NULL;
 	fieldState = INIT;
+	CoordMap_init();
 	return 0;
 }
 
@@ -95,30 +66,28 @@ void nextPiece()
 
 		int i = 0;
 		for(i = 0; i < HISTORY; i++) {
-			if(result == pieceHistory[i]) {
+			if(result == history[i]) {
 				valid = 0;
 				break;
 			}
 		}
 	}
-
-	int i = 0;
-	for(i = 0; i < (HISTORY - 1); i++) {
-		pieceHistory[i + 1] = pieceHistory[i];
-	}
-	pieceHistory[0] = result;
+	memmove(&history[1], &history[0], (HISTORY - 1) * sizeof(Square));
+	history[0] = result;
 
 	activePiece = malloc(sizeof(Piece));
-	memcpy(activePiece, &prototypes[result], sizeof(Piece));
+	activePiece->color = result;
+	activePiece->orientation = NORTH;
+	activePiece->position = proto[result];
 }
 
 void lock()
 {
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		ICoord square = ICoord_shift(activePiece->squares[i], activePiece->position.x, activePiece->position.y);
-		int index = getFieldIndex(square);
-		playfield[index] = activePiece->color;
+		ICoord current = CoordMap_get(activePiece->color, activePiece->orientation, i);
+		int index = getFieldIndex(ICoord_shift(current, activePiece->position.x, activePiece->position.y));
+		playfield[index] = current->color;
 	}
 
 	free(activePiece);
@@ -129,24 +98,14 @@ int moveHorizontal(int x)
 {
 	int direction = x >= 0 ? 1 : -1;
 	int i = 0;
-	int j = 0;
 
 	for(i = 0; i != x; i += direction) {
 		ICoord newPos = ICoord_shift(activePiece->position, direction, 0);
-
-		for(j = 0; j < 4; j++) {
-			ICoord curSquare = ICoord_shift(activePiece->squares[j], newPos.x, newPos.y);
-
-			if((curSquare.x < 0) || (curSquare.x >= FIELD_WIDTH)) {
-				return 1;
-			}
-
-			int index = getFieldIndex(curSquare);
-			if(playfield[index] != EMPTY) {
-				return 1;
-			}
+		if(checkCollision(newPos)) {
+			return 1;
+		} else {
+			activePiece->position = newPos;
 		}
-		activePiece->position = newPos;
 	}
 	return 0;
 }
@@ -154,24 +113,51 @@ int moveHorizontal(int x)
 int moveDown(int y)
 {
 	int i = 0;
-	int j = 0;
-
-	for(i = y <= 0 ? y : 0; i != y; i--) {
+	for(i = y <= 0 ? y : 0; i != 0; i++) {
 		ICoord newPos = ICoord_shift(activePiece->position, 0, -1);
-
-		for(j = 0; j < 4; j++) {
-			ICoord curSquare = ICoord_shift(activePiece->squares[i], newPos.x, newPos.y);
-
-			if(curSquare.y < 0) {
-				return 1;
-			}
-
-			int index = getFieldIndex(curSquare);
-			if(playfield[index] != EMPTY) {
-				return 1;
-			}
+		if(checkCollision(newPos)) {
+			return 1;
+		} else {
+			activePiece->position = newPos;
 		}
-		activePiece->position = newPos;
+	}
+	return 0;
+}
+
+int checkCollision(ICoord newPosition)
+{
+	int i = 0;
+	for(i = 0; i < 4; i++) {
+		ICoord base = CoordMap_get(activePiece->color, activePiece->orientation, i);
+		ICoord checkSquare = ICoord_shift(base, newPosition.x, newPosition.y);
+
+		if((checkSquare.x < 0) || (checkSquare.x >= FIELD_WIDTH) || (checkSquare.y < 0)) {
+			return 1;
+		}
+
+		int index = getFieldIndex(checkSquare);
+		if(playfield[index] != EMPTY) {
+			return 1;
+		}
+
+		int maxOffset = 0;
+		switch(activePiece->color) {
+		case RED:
+			maxOffset = 3;
+			break;
+
+		case YELLOW:
+			maxOffset = 1;
+			break;
+
+		default:
+			maxOffset = 2;
+			break;
+		}
+
+		if(checkSquare.y >= (FIELD_HEIGHT + maxOffset)) {
+			return 1;
+		}
 	}
 	return 0;
 }
