@@ -99,8 +99,9 @@ void CoordMap_destroy()
 
 ICoord* CoordMap_get(Square color, Orientation orientation, int num)
 {
-	cond_check((color >= 0) && (color < EMPTY), "argument \"color\" out of bounds");
-	cond_check((orientation >= 0) && (orientation < NONE), "argument \"orientation\" out of bounds");
+	cond_check((color >= RED) && (color < EMPTY), "argument \"color\" out of bounds");
+	cond_check((orientation >= NORTH) && (orientation < NONE), "argument \"orientation\" out of bounds");
+	cond_check((num >= 0) && (num < 4), "argument \"num\" out of bounds");
 
 	int index = color * (NONE * 4);
 	index += orientation * 4;
