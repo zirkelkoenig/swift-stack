@@ -1,3 +1,5 @@
 main
 *.o
 *.swp
+test
+.fuse_hidden*

@@ -4,11 +4,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#define get_errno() errno == 0 ? "None" : strerror(errno)
+#include <string.h>
 
 #define cond_check(A, M, ...) if(!(A)) {\
-	fprintf(stderr, "(%s:%d:%s) " M "\n", __FILE__, __LINE__, get_errno(), ##__VA_ARGS__);\
+	fprintf(stderr, "(%s:%d, %s) " M "\n", __FILE__, __LINE__, strerror(errno), ##__VA_ARGS__);\
 	errno = 0;\
 	goto error;}
 
@@ -16,6 +15,6 @@
 
 #define global_check(A, N) cond_check((A), "global \"" N "\" uninitialized")
 
-#define rc_check(A, N) cond_check((A) <= 0, "function \"" N "\" returned an error")
+#define rc_check(A, N) cond_check((A) >= 0, "function \"" N "\" returned an error")
 
 #endif

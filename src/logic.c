@@ -116,7 +116,7 @@ int nextPiece()
 		}
 	}
 	Square* rp = memmove(&history[1], &history[0], (HISTORY - 1) * sizeof(Square));
-	condcheck(rp == &history[1], "memory move failed");
+	cond_check(rp == &history[1], "memory move failed");
 	history[0] = result;
 
 	if(!activePiece) {
