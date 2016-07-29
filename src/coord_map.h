@@ -4,11 +4,11 @@
 #include "logic.h"
 #include "math_data.h"
 
-/* Initializes the tetromino map. */
-void CoordMap_init();
+/* Initializes the tetromino map. Returns 0 on success and a negative integer on error. */
+int CoordMap_init();
 
-/* Gets the coordinates of a single tetromino square. */
-ICoord CoordMap_get(Square color, Orientation orientation, int num);
+/* Gets the coordinates of a single tetromino square. returns NULL on error. */
+ICoord* CoordMap_get(Square color, Orientation orientation, int num);
 
 /* Destroys the tetromino map. */
 void CoordMap_destroy();
