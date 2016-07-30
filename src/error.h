@@ -17,4 +17,8 @@
 
 #define rc_check(A, N) cond_check((A) >= 0, "function \"" N "\" returned an error")
 
+#define sdl_check(A) if(!(A)) {\
+	fprintf(stderr, "(%s:%d) %s\n", __FILE__, __LINE__, SDL_GetError());\
+	goto sdlerr;}
+
 #endif
