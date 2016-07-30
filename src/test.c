@@ -7,22 +7,27 @@
 #include "logic.h"
 #include "math_data.h"
 
-/* Macro function which performs the test and prints out their return values if they differ from expectations.
+/* Macro function which performs the test and prints out the return value if it differs from the expectations.
 	P - name of the return type's printing function
 	F - name of the function to test
 	R - expected test result
 	... - arguments that are passed to the tested function
 */
 #define test_function(P, F, R, ...)\
-	char* exp = (P)((R));\
-	char* act = (P)((F)(__VA_ARGS__));\
-	if((!exp && act) || (exp && !act) || (exp && act && strcmp(exp, act))) {\
+	res = (P)((R));\
+	act = (P)((F)(__VA_ARGS__));\
+	if((!res && act) || (res && !act) || (res && act && strcmp(res , act))) {\
 		fprintf(stdout, "Failed test for function \"%s\"!\n", #F);\
-		fprintf(stdout, "\tExpected result: %s\n", exp);\
-		fprintf(stdout, "\tActual result:   %s\n\n", act);\
+		fprintf(stdout, "\tExpected result: %s\n", res);\
+		fprintf(stdout, "\tActual result: %s\n", act);\
+		fprintf(stdout, "\tLine: %d\n\n", __LINE__);\
 	}\
-	if(exp) free(exp);\
-	if(act) free(act);
+	if(res) {free(res); res = NULL;}\
+	if(act) {free(act); act = NULL;}
+
+/* Globals for the test_function macro. Do not alter by hand! */
+char* res = NULL;
+char* act = NULL;
 
 /* Combines different values into a string according to a format. The size of the returned string has to be large
 enough. Returns NULL on error. */
@@ -32,19 +37,36 @@ char* make_string(size_t size, const char* format, ...);
 char* print_ICoord(ICoord data);
 char* print_ICoord_p(ICoord* data);
 char* print_int(int value);
+char* print_Piece_p(Piece* piece);
 
 // testing functions
 void test_ICoord_shift();
+
 void test_CoordMap_init();
 void test_CoordMap_get();
+
+void test_init();
+void test_getFieldIndex();
+void test_nextPiece();
+void test_lock();
+void test_moveHorizontal();
+void test_moveDown();
+void test_rotateLeft();
 
 int main(int argc, char *argv[])
 {
 	test_ICoord_shift();
 	test_CoordMap_init();
 	test_CoordMap_get();
+	test_init();
+	test_getFieldIndex();
+	test_nextPiece();
+	test_lock();
+	test_moveHorizontal();
+	test_moveDown();
+	test_rotateLeft();
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 char* make_string(size_t size, const char* format, ...)
@@ -88,14 +110,13 @@ void test_CoordMap_init()
 
 void test_CoordMap_get()
 {
-	CoordMap_init();
 	int i = 0;
 	int j = 0;
 	int k = 0;
 
 	struct TestData {
-		Square arg_color;
-		Orientation arg_orientation;
+		int arg_color;
+		int arg_orientation;
 		int arg_num;
 		ICoord* result;
 	};
@@ -168,6 +189,8 @@ void test_CoordMap_get()
 	tests[7].result->x = 2;
 	tests[7].result->y = 2;
 
+	rc_check(CoordMap_init(), "CoordMap_init");
+
 	for(i = 0; i < numTests; i++) {
 		test_function(print_ICoord_p, CoordMap_get,
 				tests[i].result,
@@ -177,8 +200,8 @@ void test_CoordMap_get()
 	}
 
 	// invalid via loops
-	Square invColors[6] = {EMPTY, DESTROYED, 9, 12354, -1, -54778};
-	Orientation invOrientations[5] = {NONE, 6, 432170, -1, -93478};
+	int invColors[6] = {EMPTY, DESTROYED, 9, 12354, -1, -54778};
+	int invOrientations[5] = {NONE, 6, 432170, -1, -93478};
 	int invNums[4] = {4, 53278, -1, -157890};
 
 	for(i = 0; i < 6; i++) {
@@ -231,8 +254,17 @@ void test_CoordMap_get()
 		}
 	}
 
-error:	// fallthrough
+	// freeing tests[n]->result is not necessary here, they are freed by the printing function
 	CoordMap_destroy();
+	return;
+
+error:
+	CoordMap_destroy();
+	for(i = 0; i < numTests; i++) {
+		if(tests[i].result) {
+			free(tests[i].result);
+		}
+	}
 }
 
 char* print_ICoord(ICoord data)
@@ -255,4 +287,172 @@ char* print_ICoord_p(ICoord* data)
 char* print_int(int value)
 {
 	return make_string(3 * sizeof(int), "%d", value);
+}
+
+void test_init()
+{
+	test_function(print_int, init, 0);
+	destroy();
+}
+
+void test_getFieldIndex()
+{
+	int numTests = 3;
+	ICoord arg_square[numTests];
+	int result[numTests];
+	int i = 0;
+	int j = 0;
+
+	// valid
+	arg_square[0].x = 0;
+	arg_square[0].y = 0;
+	result[0] = 0;
+
+	arg_square[1].x = 9;
+	arg_square[1].y = 19;
+	result[1] = 199;
+
+	arg_square[2].x = 7;
+	arg_square[2].y = 12;
+	result[2] = 127;
+
+	for(i = 0; i < numTests; i++) {
+		test_function(print_int, getFieldIndex, result[i], arg_square[i]);
+	}
+
+	// invalid loops
+
+	int invX[4] = {-1, -253789, 10, 57089};
+	int invY[4] = {-1, -52370952, 20, 7482398};
+
+	for(i = 0; i < 4; i++) {
+		ICoord arg = {7, invY[i]};
+		test_function(print_int, getFieldIndex, -1, arg);
+	}
+
+	for(i = 0; i < 4; i++) {
+		ICoord arg = {invX[i], 12};
+		test_function(print_int, getFieldIndex, -1, arg);
+	}
+
+	for(i = 0; i < 4; i++) {
+		for(j = 0; j < 4; j++) {
+			ICoord arg = {invX[i], invY[j]};
+			test_function(print_int, getFieldIndex, -1, arg);
+		}
+	}
+}
+
+char* print_Piece_p(Piece* piece)
+{
+	return make_string(4 * (3 * sizeof(int)), "%d, %d, {%d, %d}",
+			piece->color, piece->orientation, piece->position.x, piece->position.y);
+}
+
+void test_nextPiece()
+{
+	init();
+	int i = 0;
+	test_function(print_int, nextPiece, 1);
+
+	// manipulate playfield to simulate collisions
+	ICoord blockPositions[4] = {
+		{4, 19},
+		{5, 19},
+		{4, 18},
+		{5, 18}
+	};
+
+	for(i = 0; i < 4; i++) {
+		int index = getFieldIndex(blockPositions[i]);
+		rc_check(index, "getFieldIndex");
+		playfield[index] = YELLOW;
+	}
+
+	test_function(print_int, nextPiece, 0);
+
+error:	// fallthrough
+	destroy();
+}
+
+void test_lock()
+{
+	rc_check(init(), "init");
+	rc_check(nextPiece(), "nextPiece");
+	test_function(print_int, lock, 0);
+
+	test_function(print_int, lock, -1);
+
+	rc_check(nextPiece(), "nextPiece");
+	test_function(print_int, lock, 0);
+
+error:	// fallthrough
+	destroy();
+}
+
+void test_moveHorizontal()
+{
+	rc_check(init(), "init");
+	rc_check(nextPiece(), "nextPiece");
+	test_function(print_int, moveHorizontal, 0, 0);
+	test_function(print_int, moveHorizontal, 0, 1);
+	test_function(print_int, moveHorizontal, 0, -2);
+	test_function(print_int, moveHorizontal, 0, 4);
+	test_function(print_int, moveHorizontal, 0, -4);
+	test_function(print_int, moveHorizontal, 1, 10);
+	test_function(print_int, moveHorizontal, 1, -10);
+
+	rc_check(lock(), "lock");	// lock at left border
+	test_function(print_int, moveHorizontal, -1, -4);
+
+	rc_check(nextPiece(), "nextPiece");
+	test_function(print_int, moveHorizontal, 1, -3);
+
+error:	// fallthrough
+	destroy();
+}
+
+void test_moveDown()
+{
+	rc_check(init(), "init");
+	rc_check(nextPiece(), "nextPiece");
+	test_function(print_int, moveDown, 0, 0);
+	test_function(print_int, moveDown, 0, -18);
+	test_function(print_int, moveDown, 0, 2);
+	test_function(print_int, moveDown, 1, -2);
+
+	rc_check(lock(), "lock");
+	test_function(print_int, moveDown, -1, -4);
+
+	rc_check(nextPiece(), "nextPiece");
+	test_function(print_int, moveDown, 1, -20);
+
+error:	// fallthrough
+	destroy();
+}
+
+void test_rotateLeft()
+{
+	rc_check(init(), "init");
+	rc_check(nextPiece(), "nextPiece");
+	rc_check(moveDown(-2), "moveDown");
+	test_function(print_int, rotateLeft, 0);
+
+	// manipulate active Piece to be an I at the left wall to simulate wall collision
+	activePiece->color = RED;
+	activePiece->orientation = EAST;
+	activePiece->position.x = -2;
+	activePiece->position.y = 12;
+
+	test_function(print_int, rotateLeft, 0);
+
+	rc_check(lock(), "lock");
+	test_function(print_int, rotateLeft, -1);
+
+	rc_check(nextPiece(), "nextPiece");
+	rc_check(moveDown(-2), "moveDown");
+	test_function(print_int, rotateLeft, 0);
+
+error:	// fallthrough
+	destroy();
 }

@@ -7,9 +7,9 @@
 
 /* Checks whether shifting the current piece to a new position results in a collision. If so, 1 is returned, otherwise
 0 is returned. Returns -1 on error. */
-int checkCollision(ICoord newPosition);
+int checkCollision(ICoord newPosition, int newOrientation);
 
-Square* history;
+int* history;
 
 ICoord* proto;
 
@@ -21,7 +21,7 @@ int init()
 	ICoord current = {0, 0};
 
 	// setup playfield
-	playfield = calloc(FIELD_WIDTH * FIELD_HEIGHT, sizeof(Square));
+	playfield = calloc(FIELD_WIDTH * FIELD_HEIGHT, sizeof(int));
 	alloc_check(playfield);
 
 	for(i = 0; i < FIELD_WIDTH; i++) {
@@ -39,7 +39,7 @@ int init()
 	// setup randomizer
 	srand(time(NULL));
 
-	history = calloc(HISTORY, sizeof(Square));
+	history = calloc(HISTORY, sizeof(int));
 	alloc_check(history);
 
 	for(i = 0; i < HISTORY; i++) {
@@ -84,9 +84,9 @@ error:
 
 int getFieldIndex(ICoord square)
 {
-	cond_check(square.x > 0 &&
+	cond_check(square.x >= 0 &&
 			square.x < FIELD_WIDTH &&
-			square.y > 0 &&
+			square.y >= 0 &&
 			square.y < FIELD_HEIGHT,
 			"argument \"square\" out of bounds");
 	return square.x + (square.y * FIELD_WIDTH);
@@ -115,7 +115,7 @@ int nextPiece()
 			}
 		}
 	}
-	Square* rp = memmove(&history[1], &history[0], (HISTORY - 1) * sizeof(Square));
+	int* rp = memmove(&history[1], &history[0], (HISTORY - 1) * sizeof(int));
 	cond_check(rp == &history[1], "memory move failed");
 	history[0] = result;
 
@@ -127,7 +127,7 @@ int nextPiece()
 	activePiece->orientation = NORTH;
 	activePiece->position = proto[result];
 
-	int coll = checkCollision(activePiece->position);
+	int coll = checkCollision(activePiece->position, activePiece->orientation);
 	rc_check(coll, "checkCollision");
 	if(coll) {
 		return 0;
@@ -177,7 +177,7 @@ int moveHorizontal(int x)
 
 	for(i = 0; i != x; i += direction) {
 		ICoord newPos = ICoord_shift(activePiece->position, direction, 0);
-		int coll = checkCollision(newPos);
+		int coll = checkCollision(newPos, activePiece->orientation);
 		rc_check(coll, "checkCollision");
 		if(coll) {
 			return 1;
@@ -198,7 +198,7 @@ int moveDown(int y)
 	int i = 0;
 	for(i = y <= 0 ? y : 0; i != 0; i++) {
 		ICoord newPos = ICoord_shift(activePiece->position, 0, -1);
-		int coll = checkCollision(newPos);
+		int coll = checkCollision(newPos, activePiece->orientation);
 		rc_check(coll, "checkCollision");
 		if(coll) {
 			return 1;
@@ -212,14 +212,13 @@ error:
 	return -1;
 }
 
-int checkCollision(ICoord newPosition)
+int checkCollision(ICoord newPosition, int newOrientation)
 {
 	global_check(activePiece, "activePiece");
-	cond_check(getFieldIndex(newPosition) != -1, "argument \"newPosition\" out of bounds");
 
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		ICoord* base = CoordMap_get(activePiece->color, activePiece->orientation, i);
+		ICoord* base = CoordMap_get(activePiece->color, newOrientation, i);
 		cond_check(base, "function \"CoordMap_get\" returned an error");
 
 		ICoord checkSquare = ICoord_shift(*base, newPosition.x, newPosition.y);
@@ -263,8 +262,8 @@ int rotateRight()
 {
 	global_check(activePiece, "activePiece");
 
-	Orientation newOrientation = (activePiece->orientation + 1) % NONE;
-	int coll = checkCollision(activePiece->position);
+	int newOrientation = (activePiece->orientation + 1) % NONE;
+	int coll = checkCollision(activePiece->position, newOrientation);
 	rc_check(coll, "checkCollision");
 	if(!coll) {
 		activePiece->orientation = newOrientation;
@@ -279,12 +278,12 @@ int rotateLeft()
 {
 	global_check(activePiece, "activePiece");
 
-	Orientation newOrientation = activePiece->orientation - 1;
+	int newOrientation = activePiece->orientation - 1;
 	if(newOrientation < 0) {
 		newOrientation += NONE;
 	}
 
-	int coll = checkCollision(activePiece->position);
+	int coll = checkCollision(activePiece->position, newOrientation);
 	rc_check(coll, "checkCollision");
 	if(!coll) {
 		activePiece->orientation = newOrientation;
@@ -364,7 +363,7 @@ int clearLines()
 	for(i = 0; i < FIELD_HEIGHT; i++) {
 		lineIndex = i * FIELD_WIDTH;
 		if(playfield[lineIndex] == DESTROYED) {
-			Square* rp = memmove(&playfield[lineIndex], &playfield[lineIndex + FIELD_WIDTH],
+			int* rp = memmove(&playfield[lineIndex], &playfield[lineIndex + FIELD_WIDTH],
 					(FIELD_WIDTH * FIELD_HEIGHT) - lineIndex);
 			cond_check(rp == &playfield[lineIndex], "memory move failed");
 			for(j = 0; j < FIELD_WIDTH; j++) {

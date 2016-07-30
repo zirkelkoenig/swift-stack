@@ -97,7 +97,7 @@ void CoordMap_destroy()
 	}
 }
 
-ICoord* CoordMap_get(Square color, Orientation orientation, int num)
+ICoord* CoordMap_get(int color, int orientation, int num)
 {
 	cond_check((color >= RED) && (color < EMPTY), "argument \"color\" out of bounds");
 	cond_check((orientation >= NORTH) && (orientation < NONE), "argument \"orientation\" out of bounds");

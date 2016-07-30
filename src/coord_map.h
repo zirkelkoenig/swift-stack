@@ -8,7 +8,7 @@
 int CoordMap_init();
 
 /* Gets the coordinates of a single tetromino square. returns NULL on error. */
-ICoord* CoordMap_get(Square color, Orientation orientation, int num);
+ICoord* CoordMap_get(int color, int orientation, int num);
 
 /* Destroys the tetromino map. */
 void CoordMap_destroy();

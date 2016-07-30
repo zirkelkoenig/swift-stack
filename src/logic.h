@@ -8,7 +8,7 @@
 #define RAND_TRIES 4
 #define HISTORY 4
 
-typedef enum Square {
+enum Square {
 	RED,
 	ORANGE,
 	BLUE,
@@ -18,23 +18,23 @@ typedef enum Square {
 	GREEN,
 	EMPTY,
 	DESTROYED
-} Square;
+};
 
-typedef enum Orientation {
+enum Orientation {
 	NORTH,
 	EAST,
 	SOUTH,
 	WEST,
 	NONE
-} Orientation;
+};
 
 typedef struct Piece {
-	Square color;
-	Orientation orientation;
+	int color;
+	int orientation;
 	ICoord position;
 } Piece;
 
-Square* playfield;
+int* playfield;
 
 Piece* activePiece;
 
