@@ -325,13 +325,17 @@ int markLines()
 	int index = 0;
 	int complete = 1;
 	int counter = 0;
+	ICoord square = {0, 0};
 
 	for(i = 0; i < FIELD_HEIGHT; i++) {
 		complete = 1;
 
 		for(j = 0; j < FIELD_WIDTH; j++) {
-			index = (i * FIELD_WIDTH) + j;
-			if(playfield[j] == EMPTY) {
+			square.x = j;
+			square.y = i;
+			index = getFieldIndex(square);
+			rc_check(index, "getFieldIndex");
+			if((playfield[index] == EMPTY) || (playfield[index] == DESTROYED)) {
 				complete = 0;
 				break;
 			}
@@ -339,7 +343,10 @@ int markLines()
 
 		if(complete) {
 			for(j = 0; j < FIELD_WIDTH; j++) {
-				index = (i * FIELD_WIDTH) + j;
+				square.x = j;
+				square.y = i;
+				index = getFieldIndex(square);
+				rc_check(index, "getFieldIndex");
 				playfield[index] = DESTROYED;
 			}
 			counter++;

@@ -52,6 +52,9 @@ void test_lock();
 void test_moveHorizontal();
 void test_moveDown();
 void test_rotateLeft();
+void test_rotateRight();
+void test_markLines();
+void test_clearLines();
 
 int main(int argc, char *argv[])
 {
@@ -65,6 +68,9 @@ int main(int argc, char *argv[])
 	test_moveHorizontal();
 	test_moveDown();
 	test_rotateLeft();
+	test_rotateRight();
+	test_markLines();
+	test_clearLines();
 
 	return EXIT_SUCCESS;
 }
@@ -443,7 +449,6 @@ void test_rotateLeft()
 	activePiece->orientation = EAST;
 	activePiece->position.x = -2;
 	activePiece->position.y = 12;
-
 	test_function(print_int, rotateLeft, 0);
 
 	rc_check(lock(), "lock");
@@ -452,6 +457,77 @@ void test_rotateLeft()
 	rc_check(nextPiece(), "nextPiece");
 	rc_check(moveDown(-2), "moveDown");
 	test_function(print_int, rotateLeft, 0);
+
+error:	// fallthrough
+	destroy();
+}
+
+void test_rotateRight()
+{
+	rc_check(init(), "init");
+	rc_check(nextPiece(), "nextPiece");
+	rc_check(moveDown(-2), "moveDown");
+	test_function(print_int, rotateRight, 0);
+
+	// manipulate active Piece to be an I at the left wall to simulate wall collision
+	activePiece->color = RED;
+	activePiece->orientation = EAST;
+	activePiece->position.x = -2;
+	activePiece->position.y = 12;
+	test_function(print_int, rotateRight, 0);
+
+	rc_check(lock(), "lock");
+	test_function(print_int, rotateRight, -1);
+
+	rc_check(nextPiece(), "nextPiece");
+	rc_check(moveDown(-2), "moveDown");
+	test_function(print_int, rotateRight, 0);
+
+error:	// fallthrough
+	destroy();
+}
+
+void test_markLines()
+{
+	rc_check(init(), "init");
+	test_function(print_int, markLines, 0);
+
+	// manipulate playfield to contain 1 marked line
+	int line_start = 4 * FIELD_WIDTH;
+	int i = 0;
+	for(i = 0; i < FIELD_WIDTH; i++) {
+		playfield[line_start + i] = BLUE;
+	}
+	test_function(print_int, markLines, 1);
+	test_function(print_int, markLines, 0);
+
+	// free playfield to force error
+	free(playfield);
+	playfield = NULL;
+	test_function(print_int, markLines, -1);
+
+error:	// fallthrough
+	destroy();
+}
+
+void test_clearLines()
+{
+	rc_check(init(), "init");
+	test_function(print_int, clearLines, 0);
+
+	// manipulate playfield to contain 1 marked line
+	int line_start = 4 * FIELD_WIDTH;
+	int i = 0;
+	for(i = 0; i < FIELD_WIDTH; i++) {
+		playfield[line_start + i] = DESTROYED;
+	}
+	test_function(print_int, clearLines, 1);
+	test_function(print_int, clearLines, 0);
+
+	// free playfield to force error
+	free(playfield);
+	playfield = NULL;
+	test_function(print_int, clearLines, -1);
 
 error:	// fallthrough
 	destroy();
