@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "coord_map.h"
 #include "error.h"
 #include "logic.h"
 
