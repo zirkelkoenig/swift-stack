@@ -158,10 +158,9 @@ int main(int argc, char *argv[])
 		if((phase == P_DROP) || (phase == P_LOCK)) {
 			SDL_Rect rects[4];
 			for(i = 0; i < 4; i++) {
-				ICoord* rel = CoordMap_get(activePiece->color, activePiece->orientation, i);
-				cond_check(rel, "function \"CoordMap_get\" returned an error");
+				const ICoord* rel = CoordMap_getSquare(activePiece->color, activePiece->orientation, i);
+				cond_check(rel, "function \"CoordMap_getSquare\" returned an error");
 				ICoord square = ICoord_shift(*rel, activePiece->position.x, activePiece->position.y);
-				free(rel);
 
 				rects[i].x = square.x * PPS;
 				rects[i].y = (FIELD_HEIGHT - square.y) * PPS;

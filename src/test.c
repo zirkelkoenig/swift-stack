@@ -35,7 +35,7 @@ char* make_string(size_t size, const char* format, ...);
 
 // printing functions
 char* print_ICoord(ICoord data);
-char* print_ICoord_p(ICoord* data);
+char* print_ICoord_p(const ICoord* data);
 char* print_int(int value);
 char* print_Piece_p(Piece* piece);
 
@@ -43,7 +43,8 @@ char* print_Piece_p(Piece* piece);
 void test_ICoord_shift();
 
 void test_CoordMap_init();
-void test_CoordMap_get();
+void test_CoordMap_getSquare();
+void test_CoordMap_getSpawn();
 
 void test_init();
 void test_getFieldIndex();
@@ -60,7 +61,8 @@ int main(int argc, char *argv[])
 {
 	test_ICoord_shift();
 	test_CoordMap_init();
-	test_CoordMap_get();
+	test_CoordMap_getSquare();
+	test_CoordMap_getSpawn();
 	test_init();
 	test_getFieldIndex();
 	test_nextPiece();
@@ -114,7 +116,7 @@ void test_CoordMap_init()
 	CoordMap_destroy();
 }
 
-void test_CoordMap_get()
+void test_CoordMap_getSquare()
 {
 	int i = 0;
 	int j = 0;
@@ -198,7 +200,7 @@ void test_CoordMap_get()
 	rc_check(CoordMap_init(), "CoordMap_init");
 
 	for(i = 0; i < numTests; i++) {
-		test_function(print_ICoord_p, CoordMap_get,
+		test_function(print_ICoord_p, CoordMap_getSquare,
 				tests[i].result,
 				tests[i].arg_color,
 				tests[i].arg_orientation,
@@ -211,21 +213,21 @@ void test_CoordMap_get()
 	int invNums[4] = {4, 53278, -1, -157890};
 
 	for(i = 0; i < 6; i++) {
-		test_function(print_ICoord_p, CoordMap_get, NULL,
+		test_function(print_ICoord_p, CoordMap_getSquare, NULL,
 				invColors[i],
 				EAST,
 				1);
 	}
 
 	for(i = 0; i < 5; i++) {
-		test_function(print_ICoord_p, CoordMap_get, NULL,
+		test_function(print_ICoord_p, CoordMap_getSquare, NULL,
 				ORANGE,
 				invOrientations[i],
 				1);
 	}
 
 	for(i = 0; i < 4; i++) {
-		test_function(print_ICoord_p, CoordMap_get, NULL,
+		test_function(print_ICoord_p, CoordMap_getSquare, NULL,
 				ORANGE,
 				EAST,
 				invNums[i]);
@@ -233,7 +235,7 @@ void test_CoordMap_get()
 
 	for(i = 0; i < 6; i++) {
 		for(j = 0; j < 5; j++) {
-			test_function(print_ICoord_p, CoordMap_get, NULL,
+			test_function(print_ICoord_p, CoordMap_getSquare, NULL,
 					invColors[i],
 					invOrientations[j],
 					1);
@@ -242,7 +244,7 @@ void test_CoordMap_get()
 
 	for(i = 0; i < 5; i++) {
 		for(j = 0; j < 4; j++) {
-			test_function(print_ICoord_p, CoordMap_get, NULL,
+			test_function(print_ICoord_p, CoordMap_getSquare, NULL,
 					ORANGE,
 					invOrientations[i],
 					invNums[j]);
@@ -252,7 +254,7 @@ void test_CoordMap_get()
 	for(i = 0; i < 6; i++) {
 		for(j = 0; j < 5; j++) {
 			for(k = 0; k < 4; k++) {
-				test_function(print_ICoord_p, CoordMap_get, NULL,
+				test_function(print_ICoord_p, CoordMap_getSquare, NULL,
 						invColors[i],
 						invOrientations[j],
 						invNums[k]);
@@ -260,11 +262,7 @@ void test_CoordMap_get()
 		}
 	}
 
-	// freeing tests[n]->result is not necessary here, they are freed by the printing function
-	CoordMap_destroy();
-	return;
-
-error:
+error:	// fallthrough
 	CoordMap_destroy();
 	for(i = 0; i < numTests; i++) {
 		if(tests[i].result) {
@@ -278,14 +276,12 @@ char* print_ICoord(ICoord data)
 	return make_string(2 * (3 * sizeof(int)), "{%d, %d}", data.x, data.y);
 }
 
-char* print_ICoord_p(ICoord* data)
+char* print_ICoord_p(const ICoord* data)
 {
 	if(!data) {
 		return NULL;
 	} else {
 		char* result = print_ICoord(*data);
-		free(data);
-		data = NULL;
 		return result;
 	}
 }
@@ -531,4 +527,34 @@ void test_clearLines()
 
 error:	// fallthrough
 	destroy();
+}
+
+void test_CoordMap_getSpawn()
+{
+	ICoord results[3] = {
+		{3, 17},
+		{3, 18},
+		{3, 18}
+	};
+	int arg_color[3] = {
+		RED,
+		GREEN,
+		BLUE
+	};
+
+	rc_check(CoordMap_init(), "CoordMap_init");
+
+	int i = 0;
+	for(i = 0; i < 3; i++) {
+		test_function(print_ICoord_p, CoordMap_getSpawn, &results[i], arg_color[i]);
+	}
+
+	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, -1);
+	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, -49874);
+	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, EMPTY);
+	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, 9);
+	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, 789532);
+
+error:
+	;	// nothing
 }

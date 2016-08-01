@@ -10,8 +10,6 @@ int checkCollision(ICoord newPosition, int newOrientation);
 
 int* history;
 
-ICoord* proto;
-
 int init()
 {
 	int i = 0;
@@ -45,22 +43,6 @@ int init()
 		history[i] = EMPTY;
 	}
 
-	// setup prototypes
-	ICoord protoInit[EMPTY] = {
-		{3, 17},
-		{3, 18},
-		{3, 18},
-		{4, 18},
-		{3, 18},
-		{3, 18},
-		{3, 18}
-	};
-	proto = calloc(EMPTY, sizeof(ICoord));
-	alloc_check(proto);
-
-	ICoord* rp = memcpy(proto, &protoInit, EMPTY * sizeof(ICoord));
-	cond_check(rp == proto, "memory copy failed");
-
 	activePiece = NULL;
 	rc_check(CoordMap_init(), "CoordMap_init");
 	return 0;
@@ -73,10 +55,6 @@ error:
 	if(history) {
 		free(history);
 		history = NULL;
-	}
-	if(proto) {
-		free(proto);
-		proto = NULL;
 	}
 	return -1;
 }
@@ -124,7 +102,7 @@ int nextPiece()
 	}
 	activePiece->color = result;
 	activePiece->orientation = NORTH;
-	activePiece->position = proto[result];
+	activePiece->position = *CoordMap_getSpawn(result);
 
 	int coll = checkCollision(activePiece->position, activePiece->orientation);
 	rc_check(coll, "checkCollision");
@@ -148,13 +126,12 @@ int lock()
 
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		ICoord *current = CoordMap_get(activePiece->color, activePiece->orientation, i);
-		cond_check(current, "function \"CoordMap_get\" returned an error");
+		const ICoord *current = CoordMap_getSquare(activePiece->color, activePiece->orientation, i);
+		cond_check(current, "function \"CoordMap_getSquare\" returned an error");
 
 		int index = getFieldIndex(ICoord_shift(*current, activePiece->position.x, activePiece->position.y));
 		rc_check(index, "getFieldIndex");
 
-		free(current);
 		playfield[index] = activePiece->color;
 	}
 
@@ -217,11 +194,10 @@ int checkCollision(ICoord newPosition, int newOrientation)
 
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		ICoord* base = CoordMap_get(activePiece->color, newOrientation, i);
-		cond_check(base, "function \"CoordMap_get\" returned an error");
+		const ICoord* base = CoordMap_getSquare(activePiece->color, newOrientation, i);
+		cond_check(base, "function \"CoordMap_getSquare\" returned an error");
 
 		ICoord checkSquare = ICoord_shift(*base, newPosition.x, newPosition.y);
-		free(base);
 		if((checkSquare.x < 0) || (checkSquare.x >= FIELD_WIDTH) || (checkSquare.y < 0)) {
 			return 1;
 		}
@@ -306,10 +282,6 @@ void destroy()
 	if(history) {
 		free(history);
 		history = NULL;
-	}
-	if(proto) {
-		free(proto);
-		proto = NULL;
 	}
 
 	CoordMap_destroy();

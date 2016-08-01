@@ -26,10 +26,13 @@ enum Orientation {
 /* Initializes the tetromino map. Returns 0 on success and a negative integer on error. */
 int CoordMap_init();
 
-/* Gets the coordinates of a single tetromino square. returns NULL on error. */
-ICoord* CoordMap_get(int color, int orientation, int num);
+/* Gets the coordinates of a single tetromino square. Returns NULL on error. */
+const ICoord* CoordMap_getSquare(int color, int orientation, int num);
 
 /* Destroys the tetromino map. */
 void CoordMap_destroy();
+
+/* Gets the coordinates of a tetromino's spawn position. Returns NULL on error. */
+const ICoord* CoordMap_getSpawn(int color);
 
 #endif
