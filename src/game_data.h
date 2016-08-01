@@ -48,6 +48,13 @@ typedef struct Piece {
 	ICoord position;
 } Piece;
 
+typedef struct State {
+	int phase;
+	int* playfield;
+	Piece activePiece;
+	int* history;
+} State;
+
 /* Initializes the tetromino map. Returns 0 on success and a negative integer on error. */
 int GameData_init();
 

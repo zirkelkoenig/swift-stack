@@ -6,20 +6,24 @@
 
 /* Checks whether shifting the current piece to a new position results in a collision. If so, 1 is returned, otherwise
 0 is returned. Returns -1 on error. */
-int checkCollision(ICoord newPosition, int newOrientation);
+int checkCollision(State* state, ICoord newPosition, int newOrientation);
 
-int* history;
-
-int init()
+State* newGame()
 {
 	int i = 0;
 	int j = 0;
 	int index = 0;
 	ICoord current = {0, 0};
 
+	// create a new game state
+	State* state = malloc(sizeof(State));
+	alloc_check(state);
+	state->phase = P_LOAD;
+	state->activePiece.color = C_EMPTY;
+
 	// setup playfield
-	playfield = calloc(FIELD_WIDTH * FIELD_HEIGHT, sizeof(int));
-	alloc_check(playfield);
+	state->playfield = calloc(FIELD_WIDTH * FIELD_HEIGHT, sizeof(int));
+	alloc_check(state->playfield);
 
 	for(i = 0; i < FIELD_WIDTH; i++) {
 		for(j = 0; j < FIELD_HEIGHT; j++) {
@@ -29,34 +33,34 @@ int init()
 			index = getFieldIndex(current);
 			rc_check(index, "getFieldIndex");
 
-			playfield[index] = C_EMPTY;
+			state->playfield[index] = C_EMPTY;
 		}
 	}
 
 	// setup randomizer
 	srand(time(NULL));
 
-	history = calloc(RAND_HISTORY, sizeof(int));
-	alloc_check(history);
+	state->history = calloc(RAND_HISTORY, sizeof(int));
+	alloc_check(state->history);
 
 	for(i = 0; i < RAND_HISTORY; i++) {
-		history[i] = C_EMPTY;
+		state->history[i] = C_EMPTY;
 	}
 
-	activePiece = NULL;
 	rc_check(GameData_init(), "GameData_init");
-	return 0;
+	return state;
 
 error:
-	if(playfield) {
-		free(playfield);
-		playfield = NULL;
+	if(state) {
+		if(state->playfield) {
+			free(state->playfield);
+		}
+		if(state->history) {
+			free(state->history);
+		}
+		free(state);
 	}
-	if(history) {
-		free(history);
-		history = NULL;
-	}
-	return -1;
+	return NULL;
 }
 
 int getFieldIndex(ICoord square)
@@ -72,9 +76,11 @@ error:
 	return -1;
 }
 
-int nextPiece()
+int nextPiece(State* state)
 {
-	global_check(history, "history");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->history, "argument \"state\" invalid");
+	cond_check(state->activePiece.color == C_EMPTY, "argument \"state\" already has an active piece");
 
 	int result = C_EMPTY;
 	int triesLeft = RAND_TRIES;
@@ -86,25 +92,21 @@ int nextPiece()
 
 		int i = 0;
 		for(i = 0; i < RAND_HISTORY; i++) {
-			if(result == history[i]) {
+			if(result == state->history[i]) {
 				valid = 0;
 				break;
 			}
 		}
 	}
-	int* rp = memmove(&history[1], &history[0], (RAND_HISTORY - 1) * sizeof(int));
-	cond_check(rp == &history[1], "memory move failed");
-	history[0] = result;
+	int* rp = memmove(&state->history[1], &state->history[0], (RAND_HISTORY - 1) * sizeof(int));
+	cond_check(rp == &state->history[1], "memory move failed");
+	state->history[0] = result;
 
-	if(!activePiece) {
-		activePiece = malloc(sizeof(Piece));
-		alloc_check(activePiece);
-	}
-	activePiece->color = result;
-	activePiece->orientation = O_NORTH;
-	activePiece->position = *GameData_getSpawn(result);
+	state->activePiece.color = result;
+	state->activePiece.orientation = O_NORTH;
+	state->activePiece.position = *GameData_getSpawn(result);
 
-	int coll = checkCollision(activePiece->position, activePiece->orientation);
+	int coll = checkCollision(state, state->activePiece.position, state->activePiece.orientation);
 	rc_check(coll, "checkCollision");
 	if(coll) {
 		return 0;
@@ -113,52 +115,50 @@ int nextPiece()
 	}
 
 error:
-	if(activePiece) {
-		free(activePiece);
-		activePiece = NULL;
-	}
 	return -1;
 }
 
-int lock()
+int lock(State* state)
 {
-	global_check(activePiece, "activePiece");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->playfield, "argument \"playfield\" invalid");
+	cond_check(state->activePiece.color != C_EMPTY, "argument \"state\" has no active piece");
 
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		const ICoord *current = GameData_getSquare(activePiece->color, activePiece->orientation, i);
+		const ICoord *current = GameData_getSquare(state->activePiece.color, state->activePiece.orientation, i);
 		cond_check(current, "function \"GameData_getSquare\" returned an error");
 
-		int index = getFieldIndex(ICoord_shift(*current, activePiece->position.x, activePiece->position.y));
+		int index = getFieldIndex(ICoord_shift(*current, state->activePiece.position.x,
+				state->activePiece.position.y));
 		rc_check(index, "getFieldIndex");
 
-		playfield[index] = activePiece->color;
+		state->playfield[index] = state->activePiece.color;
 	}
 
-	free(activePiece);
-	activePiece = NULL;
-
+	state->activePiece.color = C_EMPTY;
 	return 0;
 
 error:
 	return -1;
 }
 
-int moveHorizontal(int x)
+int moveHorizontal(State* state, int x)
 {
-	global_check(activePiece, "activePiece");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->activePiece.color != C_EMPTY, "argument \"state\" has no active piece");
 
 	int direction = x >= 0 ? 1 : -1;
 	int i = 0;
 
 	for(i = 0; i != x; i += direction) {
-		ICoord newPos = ICoord_shift(activePiece->position, direction, 0);
-		int coll = checkCollision(newPos, activePiece->orientation);
+		ICoord newPos = ICoord_shift(state->activePiece.position, direction, 0);
+		int coll = checkCollision(state, newPos, state->activePiece.orientation);
 		rc_check(coll, "checkCollision");
 		if(coll) {
 			return 1;
 		} else {
-			activePiece->position = newPos;
+			state->activePiece.position = newPos;
 		}
 	}
 	return 0;
@@ -167,19 +167,20 @@ error:
 	return -1;
 }
 
-int moveDown(int y)
+int moveDown(State* state, int y)
 {
-	global_check(activePiece, "activePiece");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->activePiece.color != C_EMPTY, "argument \"state\" has no active piece");
 
 	int i = 0;
 	for(i = y <= 0 ? y : 0; i != 0; i++) {
-		ICoord newPos = ICoord_shift(activePiece->position, 0, -1);
-		int coll = checkCollision(newPos, activePiece->orientation);
+		ICoord newPos = ICoord_shift(state->activePiece.position, 0, -1);
+		int coll = checkCollision(state, newPos, state->activePiece.orientation);
 		rc_check(coll, "checkCollision");
 		if(coll) {
 			return 1;
 		} else {
-			activePiece->position = newPos;
+			state->activePiece.position = newPos;
 		}
 	}
 	return 0;
@@ -188,13 +189,14 @@ error:
 	return -1;
 }
 
-int checkCollision(ICoord newPosition, int newOrientation)
+int checkCollision(State* state, ICoord newPosition, int newOrientation)
 {
-	global_check(activePiece, "activePiece");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->activePiece.color != C_EMPTY, "argument \"state\" has no active piece");
 
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		const ICoord* base = GameData_getSquare(activePiece->color, newOrientation, i);
+		const ICoord* base = GameData_getSquare(state->activePiece.color, newOrientation, i);
 		cond_check(base, "function \"GameData_getSquare\" returned an error");
 
 		ICoord checkSquare = ICoord_shift(*base, newPosition.x, newPosition.y);
@@ -204,12 +206,12 @@ int checkCollision(ICoord newPosition, int newOrientation)
 
 		int index = getFieldIndex(checkSquare);
 		rc_check(index, "getFieldIndex");
-		if(playfield[index] != C_EMPTY) {
+		if(state->playfield[index] != C_EMPTY) {
 			return 1;
 		}
 
 		int maxOffset = 0;
-		switch(activePiece->color) {
+		switch(state->activePiece.color) {
 		case C_RED:
 			maxOffset = 3;
 			break;
@@ -233,15 +235,16 @@ error:
 	return -1;
 }
 
-int rotateRight()
+int rotateRight(State* state)
 {
-	global_check(activePiece, "activePiece");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->activePiece.color != C_EMPTY, "argument \"state\" has no active piece");
 
-	int newOrientation = (activePiece->orientation + 1) % O_NONE;
-	int coll = checkCollision(activePiece->position, newOrientation);
+	int newOrientation = (state->activePiece.orientation + 1) % O_NONE;
+	int coll = checkCollision(state, state->activePiece.position, newOrientation);
 	rc_check(coll, "checkCollision");
 	if(!coll) {
-		activePiece->orientation = newOrientation;
+		state->activePiece.orientation = newOrientation;
 	}
 	return 0;
 
@@ -249,19 +252,20 @@ error:
 	return -1;
 }
 
-int rotateLeft()
+int rotateLeft(State* state)
 {
-	global_check(activePiece, "activePiece");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->activePiece.color != C_EMPTY, "argument \"state\" has no active piece");
 
-	int newOrientation = activePiece->orientation - 1;
+	int newOrientation = state->activePiece.orientation - 1;
 	if(newOrientation < 0) {
 		newOrientation += O_NONE;
 	}
 
-	int coll = checkCollision(activePiece->position, newOrientation);
+	int coll = checkCollision(state, state->activePiece.position, newOrientation);
 	rc_check(coll, "checkCollision");
 	if(!coll) {
-		activePiece->orientation = newOrientation;
+		state->activePiece.orientation = newOrientation;
 	}
 	return 0;
 
@@ -269,27 +273,24 @@ error:
 	return -1;
 }
 
-void destroy()
+void destroyGame(State* state)
 {
-	if(activePiece) {
-		free(activePiece);
-		activePiece = NULL;
+	if(state) {
+		if(state->playfield) {
+			free(state->playfield);
+		}
+		if(state->history) {
+			free(state->history);
+		}
+		free(state);
 	}
-	if(playfield) {
-		free(playfield);
-		playfield = NULL;
-	}
-	if(history) {
-		free(history);
-		history = NULL;
-	}
-
 	GameData_destroy();
 }
 
-int markLines()
+int markLines(State* state)
 {
-	global_check(playfield, "playfield");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->playfield, "argument \"state\" invalid");
 
 	int i = 0;
 	int j = 0;
@@ -306,7 +307,7 @@ int markLines()
 			square.y = i;
 			index = getFieldIndex(square);
 			rc_check(index, "getFieldIndex");
-			if((playfield[index] == C_EMPTY) || (playfield[index] == C_DESTROYED)) {
+			if((state->playfield[index] == C_EMPTY) || (state->playfield[index] == C_DESTROYED)) {
 				complete = 0;
 				break;
 			}
@@ -318,7 +319,7 @@ int markLines()
 				square.y = i;
 				index = getFieldIndex(square);
 				rc_check(index, "getFieldIndex");
-				playfield[index] = C_DESTROYED;
+				state->playfield[index] = C_DESTROYED;
 			}
 			counter++;
 		}
@@ -329,9 +330,10 @@ error:
 	return -1;
 }
 
-int clearLines()
+int clearLines(State* state)
 {
-	global_check(playfield, "playfield");
+	cond_check(state, "argument \"state\" uninitialized");
+	cond_check(state->playfield, "argument \"state\" invalid");
 
 	int i = 0;
 	int j = 0;
@@ -340,12 +342,12 @@ int clearLines()
 
 	for(i = 0; i < FIELD_HEIGHT; i++) {
 		lineIndex = i * FIELD_WIDTH;
-		if(playfield[lineIndex] == C_DESTROYED) {
-			int* rp = memmove(&playfield[lineIndex], &playfield[lineIndex + FIELD_WIDTH],
+		if(state->playfield[lineIndex] == C_DESTROYED) {
+			int* rp = memmove(&state->playfield[lineIndex], &state->playfield[lineIndex + FIELD_WIDTH],
 					(FIELD_WIDTH * FIELD_HEIGHT) - lineIndex);
-			cond_check(rp == &playfield[lineIndex], "memory move failed");
+			cond_check(rp == &state->playfield[lineIndex], "memory move failed");
 			for(j = 0; j < FIELD_WIDTH; j++) {
-				playfield[(FIELD_WIDTH * (FIELD_HEIGHT - 1)) + j] = C_EMPTY;
+				state->playfield[(FIELD_WIDTH * (FIELD_HEIGHT - 1)) + j] = C_EMPTY;
 			}
 			counter++;
 		}

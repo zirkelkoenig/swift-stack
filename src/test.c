@@ -47,7 +47,7 @@ void test_GameData_getSquare();
 void test_GameData_getSpawn();
 void test_GameData_getColor();
 
-void test_init();
+//void test_newGame();
 void test_getFieldIndex();
 void test_nextPiece();
 void test_lock();
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 	test_GameData_getSquare();
 	test_GameData_getSpawn();
 	test_GameData_getColor();
-	test_init();
+	//test_newGame();
 	test_getFieldIndex();
 	test_nextPiece();
 	test_lock();
@@ -428,12 +428,6 @@ char* print_uint8_t_p(const uint8_t* value)
 	}
 }
 
-void test_init()
-{
-	test_function(print_int, init, 0);
-	destroy();
-}
-
 void test_getFieldIndex()
 {
 	int numTests = 3;
@@ -490,9 +484,11 @@ char* print_Piece_p(Piece* piece)
 
 void test_nextPiece()
 {
-	init();
+	State* game = newGame();
+	rc_check(game, "newGame");
+
 	int i = 0;
-	test_function(print_int, nextPiece, 1);
+	test_function(print_int, nextPiece, 1, game);
 
 	// manipulate playfield to simulate collisions
 	ICoord blockPositions[4] = {
@@ -505,165 +501,175 @@ void test_nextPiece()
 	for(i = 0; i < 4; i++) {
 		int index = getFieldIndex(blockPositions[i]);
 		rc_check(index, "getFieldIndex");
-		playfield[index] = C_YELLOW;
+		game->playfield[index] = C_YELLOW;
 	}
+	game->activePiece.color = C_EMPTY;
 
-	test_function(print_int, nextPiece, 0);
+	test_function(print_int, nextPiece, 0, game);
 
 error:	// fallthrough
-	destroy();
+	destroyGame(game);
 }
 
 void test_lock()
 {
-	rc_check(init(), "init");
-	rc_check(nextPiece(), "nextPiece");
-	test_function(print_int, lock, 0);
+	State* game = newGame();
+	rc_check(game, "newGame");
+	rc_check(nextPiece(game), "nextPiece");
+	test_function(print_int, lock, 0, game);
 
-	test_function(print_int, lock, -1);
+	test_function(print_int, lock, -1, game);
 
-	rc_check(nextPiece(), "nextPiece");
-	test_function(print_int, lock, 0);
+	rc_check(nextPiece(game), "nextPiece");
+	test_function(print_int, lock, 0, game);
 
 error:	// fallthrough
-	destroy();
+	destroyGame(game);
 }
 
 void test_moveHorizontal()
 {
-	rc_check(init(), "init");
-	rc_check(nextPiece(), "nextPiece");
-	test_function(print_int, moveHorizontal, 0, 0);
-	test_function(print_int, moveHorizontal, 0, 1);
-	test_function(print_int, moveHorizontal, 0, -2);
-	test_function(print_int, moveHorizontal, 0, 4);
-	test_function(print_int, moveHorizontal, 0, -4);
-	test_function(print_int, moveHorizontal, 1, 10);
-	test_function(print_int, moveHorizontal, 1, -10);
+	State* game = newGame();
+	rc_check(game, "newGame");
+	rc_check(nextPiece(game), "nextPiece");
 
-	rc_check(lock(), "lock");	// lock at left border
-	test_function(print_int, moveHorizontal, -1, -4);
+	test_function(print_int, moveHorizontal, 0, game, 0);
+	test_function(print_int, moveHorizontal, 0, game, 1);
+	test_function(print_int, moveHorizontal, 0, game, -2);
+	test_function(print_int, moveHorizontal, 0, game, 4);
+	test_function(print_int, moveHorizontal, 0, game, -4);
+	test_function(print_int, moveHorizontal, 1, game, 10);
+	test_function(print_int, moveHorizontal, 1, game, -10);
 
-	rc_check(nextPiece(), "nextPiece");
-	test_function(print_int, moveHorizontal, 1, -3);
+	rc_check(lock(game), "lock");	// lock at left border
+	test_function(print_int, moveHorizontal, -1, game, -4);
+
+	rc_check(nextPiece(game), "nextPiece");
+	test_function(print_int, moveHorizontal, 1, game, -3);
 
 error:	// fallthrough
-	destroy();
+	destroyGame(game);
 }
 
 void test_moveDown()
 {
-	rc_check(init(), "init");
-	rc_check(nextPiece(), "nextPiece");
-	test_function(print_int, moveDown, 0, 0);
-	test_function(print_int, moveDown, 0, -18);
-	test_function(print_int, moveDown, 0, 2);
-	test_function(print_int, moveDown, 1, -2);
+	State* game = newGame();
+	rc_check(game, "newGame");
+	rc_check(nextPiece(game), "nextPiece");
 
-	rc_check(lock(), "lock");
-	test_function(print_int, moveDown, -1, -4);
+	test_function(print_int, moveDown, 0, game, 0);
+	test_function(print_int, moveDown, 0, game, -18);
+	test_function(print_int, moveDown, 0, game, 2);
+	test_function(print_int, moveDown, 1, game, -2);
 
-	rc_check(nextPiece(), "nextPiece");
-	test_function(print_int, moveDown, 1, -20);
+	rc_check(lock(game), "lock");
+	test_function(print_int, moveDown, -1, game, -4);
+
+	rc_check(nextPiece(game), "nextPiece");
+	test_function(print_int, moveDown, 1, game, -20);
 
 error:	// fallthrough
-	destroy();
+	destroyGame(game);
 }
 
 void test_rotateLeft()
 {
-	rc_check(init(), "init");
-	rc_check(nextPiece(), "nextPiece");
-	rc_check(moveDown(-2), "moveDown");
-	test_function(print_int, rotateLeft, 0);
+	State* game = newGame();
+	rc_check(game, "newGame");
+	rc_check(nextPiece(game), "nextPiece");
+	rc_check(moveDown(game, -2), "moveDown");
+	test_function(print_int, rotateLeft, 0, game);
 
 	// manipulate active Piece to be an I at the left wall to simulate wall collision
-	activePiece->color = C_RED;
-	activePiece->orientation = O_EAST;
-	activePiece->position.x = -2;
-	activePiece->position.y = 12;
-	test_function(print_int, rotateLeft, 0);
+	game->activePiece.color = C_RED;
+	game->activePiece.orientation = O_EAST;
+	game->activePiece.position.x = -2;
+	game->activePiece.position.y = 12;
+	test_function(print_int, rotateLeft, 0, game);
 
-	rc_check(lock(), "lock");
-	test_function(print_int, rotateLeft, -1);
+	rc_check(lock(game), "lock");
+	test_function(print_int, rotateLeft, -1, game);
 
-	rc_check(nextPiece(), "nextPiece");
-	rc_check(moveDown(-2), "moveDown");
-	test_function(print_int, rotateLeft, 0);
+	rc_check(nextPiece(game), "nextPiece");
+	rc_check(moveDown(game, -2), "moveDown");
+	test_function(print_int, rotateLeft, 0, game);
 
 error:	// fallthrough
-	destroy();
+	destroyGame(game);
 }
 
 void test_rotateRight()
 {
-	rc_check(init(), "init");
-	rc_check(nextPiece(), "nextPiece");
-	rc_check(moveDown(-2), "moveDown");
-	test_function(print_int, rotateRight, 0);
+	State* game = newGame();
+	rc_check(game, "newGame");
+	rc_check(nextPiece(game), "nextPiece");
+	rc_check(moveDown(game, -2), "moveDown");
+	test_function(print_int, rotateRight, 0, game);
 
 	// manipulate active Piece to be an I at the left wall to simulate wall collision
-	activePiece->color = C_RED;
-	activePiece->orientation = O_EAST;
-	activePiece->position.x = -2;
-	activePiece->position.y = 12;
-	test_function(print_int, rotateRight, 0);
+	game->activePiece.color = C_RED;
+	game->activePiece.orientation = O_EAST;
+	game->activePiece.position.x = -2;
+	game->activePiece.position.y = 12;
+	test_function(print_int, rotateRight, 0, game);
 
-	rc_check(lock(), "lock");
-	test_function(print_int, rotateRight, -1);
+	rc_check(lock(game), "lock");
+	test_function(print_int, rotateRight, -1, game);
 
-	rc_check(nextPiece(), "nextPiece");
-	rc_check(moveDown(-2), "moveDown");
-	test_function(print_int, rotateRight, 0);
+	rc_check(nextPiece(game), "nextPiece");
+	rc_check(moveDown(game, -2), "moveDown");
+	test_function(print_int, rotateRight, 0, game);
 
 error:	// fallthrough
-	destroy();
+	destroyGame(game);
 }
 
 void test_markLines()
 {
-	rc_check(init(), "init");
-	test_function(print_int, markLines, 0);
+	State* game = newGame();
+	rc_check(game, "newGame");
+	test_function(print_int, markLines, 0, game);
 
 	// manipulate playfield to contain 1 marked line
 	int line_start = 4 * FIELD_WIDTH;
 	int i = 0;
 	for(i = 0; i < FIELD_WIDTH; i++) {
-		playfield[line_start + i] = C_BLUE;
+		game->playfield[line_start + i] = C_BLUE;
 	}
-	test_function(print_int, markLines, 1);
-	test_function(print_int, markLines, 0);
+	test_function(print_int, markLines, 1, game);
+	test_function(print_int, markLines, 0, game);
 
 	// free playfield to force error
-	free(playfield);
-	playfield = NULL;
-	test_function(print_int, markLines, -1);
+	free(game->playfield);
+	game->playfield = NULL;
+	test_function(print_int, markLines, -1, game);
 
 error:	// fallthrough
-	destroy();
+	destroyGame(game);
 }
 
 void test_clearLines()
 {
-	rc_check(init(), "init");
-	test_function(print_int, clearLines, 0);
+	State* game = newGame();
+	rc_check(game, "newGame");
+	test_function(print_int, clearLines, 0, game);
 
 	// manipulate playfield to contain 1 marked line
 	int line_start = 4 * FIELD_WIDTH;
 	int i = 0;
 	for(i = 0; i < FIELD_WIDTH; i++) {
-		playfield[line_start + i] = C_DESTROYED;
+		game->playfield[line_start + i] = C_DESTROYED;
 	}
-	test_function(print_int, clearLines, 1);
-	test_function(print_int, clearLines, 0);
+	test_function(print_int, clearLines, 1, game);
+	test_function(print_int, clearLines, 0, game);
 
 	// free playfield to force error
-	free(playfield);
-	playfield = NULL;
-	test_function(print_int, clearLines, -1);
+	free(game->playfield);
+	game->playfield = NULL;
+	test_function(print_int, clearLines, -1, game);
 
 error:	// fallthrough
-	destroy();
+	destroyGame(game);
 }
 
 void test_GameData_getSpawn()
