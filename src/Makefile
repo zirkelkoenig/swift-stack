@@ -1,11 +1,11 @@
 CFLAGS=-Wall -g
 
-all:
+all: game_data.o logic.o math_data.o
 	rm -f main
-	gcc main.c coord_map.o math_data.o logic.o -Wall -g -lSDL2 -o main
+	gcc main.c game_data.o math_data.o logic.o -Wall -g -lSDL2 -o main
 
-test: coord_map.o math_data.o logic.o
+test: game_data.o logic.o math_data.o
 
-coord_map.o: math_data.o
+game_data.o: math_data.o
 
-logic.o: math_data.o coord_map.o
+logic.o: game_data.o math_data.o

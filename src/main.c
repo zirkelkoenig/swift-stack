@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
-#include "coord_map.h"
 #include "error.h"
+#include "game_data.h"
 #include "logic.h"
 #include "math_data.h"
 
@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
 		if((phase == P_DROP) || (phase == P_LOCK)) {
 			SDL_Rect rects[4];
 			for(i = 0; i < 4; i++) {
-				const ICoord* rel = CoordMap_getSquare(activePiece->color, activePiece->orientation, i);
-				cond_check(rel, "function \"CoordMap_getSquare\" returned an error");
+				const ICoord* rel = GameData_getSquare(activePiece->color, activePiece->orientation, i);
+				cond_check(rel, "function \"GameData_getSquare\" returned an error");
 				ICoord square = ICoord_shift(*rel, activePiece->position.x, activePiece->position.y);
 
 				rects[i].x = square.x * PPS;

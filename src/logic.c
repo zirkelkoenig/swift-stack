@@ -44,7 +44,7 @@ int init()
 	}
 
 	activePiece = NULL;
-	rc_check(CoordMap_init(), "CoordMap_init");
+	rc_check(GameData_init(), "GameData_init");
 	return 0;
 
 error:
@@ -102,7 +102,7 @@ int nextPiece()
 	}
 	activePiece->color = result;
 	activePiece->orientation = NORTH;
-	activePiece->position = *CoordMap_getSpawn(result);
+	activePiece->position = *GameData_getSpawn(result);
 
 	int coll = checkCollision(activePiece->position, activePiece->orientation);
 	rc_check(coll, "checkCollision");
@@ -126,8 +126,8 @@ int lock()
 
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		const ICoord *current = CoordMap_getSquare(activePiece->color, activePiece->orientation, i);
-		cond_check(current, "function \"CoordMap_getSquare\" returned an error");
+		const ICoord *current = GameData_getSquare(activePiece->color, activePiece->orientation, i);
+		cond_check(current, "function \"GameData_getSquare\" returned an error");
 
 		int index = getFieldIndex(ICoord_shift(*current, activePiece->position.x, activePiece->position.y));
 		rc_check(index, "getFieldIndex");
@@ -194,8 +194,8 @@ int checkCollision(ICoord newPosition, int newOrientation)
 
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		const ICoord* base = CoordMap_getSquare(activePiece->color, newOrientation, i);
-		cond_check(base, "function \"CoordMap_getSquare\" returned an error");
+		const ICoord* base = GameData_getSquare(activePiece->color, newOrientation, i);
+		cond_check(base, "function \"GameData_getSquare\" returned an error");
 
 		ICoord checkSquare = ICoord_shift(*base, newPosition.x, newPosition.y);
 		if((checkSquare.x < 0) || (checkSquare.x >= FIELD_WIDTH) || (checkSquare.y < 0)) {
@@ -284,7 +284,7 @@ void destroy()
 		history = NULL;
 	}
 
-	CoordMap_destroy();
+	GameData_destroy();
 }
 
 int markLines()

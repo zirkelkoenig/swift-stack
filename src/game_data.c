@@ -1,15 +1,15 @@
 #include <stdlib.h>
 #include <string.h>
-#include "coord_map.h"
 #include "error.h"
+#include "game_data.h"
 
 ICoord* squarePositions;
 
 ICoord* spawnPositions;
 
-int CoordMap_init()
+int GameData_init()
 {
-	ICoord squares[EMPTY][NONE][4] = {{	// red
+	ICoord squaresInit[EMPTY][NONE][4] = {{	// red
 			{{0, 2}, {1, 2}, {2, 2}, {3, 2}},
 			{{2, 0}, {2, 1}, {2, 2}, {2, 3}},
 			{{0, 2}, {1, 2}, {2, 2}, {3, 2}},
@@ -50,10 +50,10 @@ int CoordMap_init()
 	squarePositions = calloc(EMPTY * NONE * 4, sizeof(ICoord));
 	alloc_check(squarePositions);
 
-	ICoord* rp = memcpy(squarePositions, &squares, (EMPTY * NONE * 4) * sizeof(ICoord));
+	ICoord* rp = memcpy(squarePositions, &squaresInit, (EMPTY * NONE * 4) * sizeof(ICoord));
 	cond_check(rp == squarePositions, "memory copy failed");
 
-	ICoord spawns[EMPTY] = {
+	ICoord spawnsInit[EMPTY] = {
 		{3, 17},
 		{3, 18},
 		{3, 18},
@@ -66,7 +66,7 @@ int CoordMap_init()
 	spawnPositions = calloc(EMPTY, sizeof(ICoord));
 	alloc_check(spawnPositions);
 
-	rp = memcpy(spawnPositions, &spawns, EMPTY * sizeof(ICoord));
+	rp = memcpy(spawnPositions, &spawnsInit, EMPTY * sizeof(ICoord));
 	cond_check(rp == spawnPositions, "memory copy failed");
 
 	return 0;
@@ -80,7 +80,7 @@ error:
 	return -1;
 }
 
-const ICoord* CoordMap_getSquare(int color, int orientation, int num)
+const ICoord* GameData_getSquare(int color, int orientation, int num)
 {
 	cond_check((color >= RED) && (color < EMPTY), "argument \"color\" out of bounds");
 	cond_check((orientation >= NORTH) && (orientation < NONE), "argument \"orientation\" out of bounds");
@@ -96,7 +96,7 @@ error:
 	return NULL;
 }
 
-const ICoord* CoordMap_getSpawn(int color)
+const ICoord* GameData_getSpawn(int color)
 {
 	cond_check((color >= RED) && (color < EMPTY), "argument \"color\" out of bounds");
 	global_check(spawnPositions, "spawnPositions");
@@ -106,7 +106,7 @@ error:
 	return NULL;
 }
 
-void CoordMap_destroy()
+void GameData_destroy()
 {
 	free(squarePositions);
 	free(spawnPositions);

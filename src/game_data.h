@@ -1,5 +1,5 @@
-#ifndef _coord_map_h
-#define _coord_map_h
+#ifndef _game_data_h
+#define _game_data_h
 
 #include "math_data.h"
 
@@ -24,15 +24,15 @@ enum Orientation {
 };
 
 /* Initializes the tetromino map. Returns 0 on success and a negative integer on error. */
-int CoordMap_init();
+int GameData_init();
 
 /* Gets the coordinates of a single tetromino square. Returns NULL on error. */
-const ICoord* CoordMap_getSquare(int color, int orientation, int num);
+const ICoord* GameData_getSquare(int color, int orientation, int num);
 
 /* Destroys the tetromino map. */
-void CoordMap_destroy();
+void GameData_destroy();
 
 /* Gets the coordinates of a tetromino's spawn position. Returns NULL on error. */
-const ICoord* CoordMap_getSpawn(int color);
+const ICoord* GameData_getSpawn(int color);
 
 #endif

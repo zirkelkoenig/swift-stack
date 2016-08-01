@@ -2,10 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "coord_map.h"
 #include "error.h"
+#include "game_data.h"
 #include "logic.h"
-#include "math_data.h"
 
 /* Macro function which performs the test and prints out the return value if it differs from the expectations.
 	P - name of the return type's printing function
@@ -42,9 +41,9 @@ char* print_Piece_p(Piece* piece);
 // testing functions
 void test_ICoord_shift();
 
-void test_CoordMap_init();
-void test_CoordMap_getSquare();
-void test_CoordMap_getSpawn();
+void test_GameData_init();
+void test_GameData_getSquare();
+void test_GameData_getSpawn();
 
 void test_init();
 void test_getFieldIndex();
@@ -60,9 +59,9 @@ void test_clearLines();
 int main(int argc, char *argv[])
 {
 	test_ICoord_shift();
-	test_CoordMap_init();
-	test_CoordMap_getSquare();
-	test_CoordMap_getSpawn();
+	test_GameData_init();
+	test_GameData_getSquare();
+	test_GameData_getSpawn();
 	test_init();
 	test_getFieldIndex();
 	test_nextPiece();
@@ -110,13 +109,13 @@ void test_ICoord_shift()
 	test_function(print_ICoord, ICoord_shift, result, arg_coord, arg_x, arg_y);
 }
 
-void test_CoordMap_init()
+void test_GameData_init()
 {
-	test_function(print_int, CoordMap_init, 0);
-	CoordMap_destroy();
+	test_function(print_int, GameData_init, 0);
+	GameData_destroy();
 }
 
-void test_CoordMap_getSquare()
+void test_GameData_getSquare()
 {
 	int i = 0;
 	int j = 0;
@@ -197,10 +196,10 @@ void test_CoordMap_getSquare()
 	tests[7].result->x = 2;
 	tests[7].result->y = 2;
 
-	rc_check(CoordMap_init(), "CoordMap_init");
+	rc_check(GameData_init(), "GameData_init");
 
 	for(i = 0; i < numTests; i++) {
-		test_function(print_ICoord_p, CoordMap_getSquare,
+		test_function(print_ICoord_p, GameData_getSquare,
 				tests[i].result,
 				tests[i].arg_color,
 				tests[i].arg_orientation,
@@ -213,21 +212,21 @@ void test_CoordMap_getSquare()
 	int invNums[4] = {4, 53278, -1, -157890};
 
 	for(i = 0; i < 6; i++) {
-		test_function(print_ICoord_p, CoordMap_getSquare, NULL,
+		test_function(print_ICoord_p, GameData_getSquare, NULL,
 				invColors[i],
 				EAST,
 				1);
 	}
 
 	for(i = 0; i < 5; i++) {
-		test_function(print_ICoord_p, CoordMap_getSquare, NULL,
+		test_function(print_ICoord_p, GameData_getSquare, NULL,
 				ORANGE,
 				invOrientations[i],
 				1);
 	}
 
 	for(i = 0; i < 4; i++) {
-		test_function(print_ICoord_p, CoordMap_getSquare, NULL,
+		test_function(print_ICoord_p, GameData_getSquare, NULL,
 				ORANGE,
 				EAST,
 				invNums[i]);
@@ -235,7 +234,7 @@ void test_CoordMap_getSquare()
 
 	for(i = 0; i < 6; i++) {
 		for(j = 0; j < 5; j++) {
-			test_function(print_ICoord_p, CoordMap_getSquare, NULL,
+			test_function(print_ICoord_p, GameData_getSquare, NULL,
 					invColors[i],
 					invOrientations[j],
 					1);
@@ -244,7 +243,7 @@ void test_CoordMap_getSquare()
 
 	for(i = 0; i < 5; i++) {
 		for(j = 0; j < 4; j++) {
-			test_function(print_ICoord_p, CoordMap_getSquare, NULL,
+			test_function(print_ICoord_p, GameData_getSquare, NULL,
 					ORANGE,
 					invOrientations[i],
 					invNums[j]);
@@ -254,7 +253,7 @@ void test_CoordMap_getSquare()
 	for(i = 0; i < 6; i++) {
 		for(j = 0; j < 5; j++) {
 			for(k = 0; k < 4; k++) {
-				test_function(print_ICoord_p, CoordMap_getSquare, NULL,
+				test_function(print_ICoord_p, GameData_getSquare, NULL,
 						invColors[i],
 						invOrientations[j],
 						invNums[k]);
@@ -263,7 +262,7 @@ void test_CoordMap_getSquare()
 	}
 
 error:	// fallthrough
-	CoordMap_destroy();
+	GameData_destroy();
 	for(i = 0; i < numTests; i++) {
 		if(tests[i].result) {
 			free(tests[i].result);
@@ -529,7 +528,7 @@ error:	// fallthrough
 	destroy();
 }
 
-void test_CoordMap_getSpawn()
+void test_GameData_getSpawn()
 {
 	ICoord results[3] = {
 		{3, 17},
@@ -542,18 +541,18 @@ void test_CoordMap_getSpawn()
 		BLUE
 	};
 
-	rc_check(CoordMap_init(), "CoordMap_init");
+	rc_check(GameData_init(), "GameData_init");
 
 	int i = 0;
 	for(i = 0; i < 3; i++) {
-		test_function(print_ICoord_p, CoordMap_getSpawn, &results[i], arg_color[i]);
+		test_function(print_ICoord_p, GameData_getSpawn, &results[i], arg_color[i]);
 	}
 
-	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, -1);
-	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, -49874);
-	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, EMPTY);
-	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, 9);
-	test_function(print_ICoord_p, CoordMap_getSpawn, NULL, 789532);
+	test_function(print_ICoord_p, GameData_getSpawn, NULL, -1);
+	test_function(print_ICoord_p, GameData_getSpawn, NULL, -49874);
+	test_function(print_ICoord_p, GameData_getSpawn, NULL, EMPTY);
+	test_function(print_ICoord_p, GameData_getSpawn, NULL, 9);
+	test_function(print_ICoord_p, GameData_getSpawn, NULL, 789532);
 
 error:
 	;	// nothing
