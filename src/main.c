@@ -7,14 +7,12 @@
 
 #define PPS 32
 
-int phase;
-
-void print_playfield();
+void print_playfield(State* game);
 
 int main(int argc, char *argv[])
 {
-	rc_check(init(), "init");
-	phase = P_LOAD;
+	State* game = newGame();
+	rc_check(game, "newGame");
 
 	sdl_check(SDL_Init(SDL_INIT_VIDEO) == 0);
 	sdl_check(SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1") == SDL_TRUE);
@@ -40,16 +38,16 @@ int main(int argc, char *argv[])
 	const uint8_t *squareColor[4];
 
 	while(!quit) {
-		switch(phase) {
+		switch(game->phase) {
 		case P_LOAD:
 			if(counter == LOAD_DELAY) {
-				rc = nextPiece();
+				rc = nextPiece(game);
 				rc_check(rc, "nextPiece");
 				quit = !rc;
 
 				//print_playfield();
 				counter = 0;
-				phase = P_DROP;
+				game->phase = P_DROP;
 			} else {
 				counter++;
 			}
@@ -58,12 +56,12 @@ int main(int argc, char *argv[])
 		case P_DROP:
 			;
 			int gDrop = counter / GRAVITY;
-			rc = moveDown(-gDrop);
+			rc = moveDown(game, -gDrop);
 			rc_check(rc, "moveDown");
 
 			if(rc) {
 				counter = 0;
-				phase = P_LOCK;
+				game->phase = P_LOCK;
 			} else {
 				if(gDrop) {
 					counter = 0;
@@ -75,11 +73,11 @@ int main(int argc, char *argv[])
 
 		case P_LOCK:
 			if(counter == LOCK_DELAY) {
-				rc_check(lock(), "lock");
-				rc = markLines();
+				rc_check(lock(game), "lock");
+				rc = markLines(game);
 				rc_check(rc, "markLines");
 
-				phase = rc ? P_CLEAR : P_LOAD;
+				game->phase = rc ? P_CLEAR : P_LOAD;
 				counter = 0;
 			} else {
 				counter++;
@@ -88,9 +86,9 @@ int main(int argc, char *argv[])
 
 		case P_CLEAR:
 			if(counter == CLEAR_DELAY) {
-				rc_check(clearLines(), "clearLines");
+				rc_check(clearLines(game), "clearLines");
 
-				phase = P_LOAD;
+				game->phase = P_LOAD;
 				counter = 0;
 			} else {
 				counter++;
@@ -110,12 +108,14 @@ int main(int argc, char *argv[])
 		sdl_check(SDL_RenderClear(renderer) == 0);
 
 		// active piece
-		if((phase == P_DROP) || (phase == P_LOCK)) {
+		if((game->phase == P_DROP) || (game->phase == P_LOCK)) {
 			SDL_Rect rects[4];
 			for(i = 0; i < 4; i++) {
-				const ICoord* rel = GameData_getSquare(activePiece->color, activePiece->orientation, i);
+				const ICoord* rel = GameData_getSquare(game->activePiece.color,
+						game->activePiece.orientation, i);
 				cond_check(rel, "function \"GameData_getSquare\" returned an error");
-				ICoord square = ICoord_shift(*rel, activePiece->position.x, activePiece->position.y);
+				ICoord square = ICoord_shift(*rel, game->activePiece.position.x,
+						game->activePiece.position.y);
 
 				rects[i].x = square.x * PPS;
 				rects[i].y = (FIELD_HEIGHT - square.y) * PPS;
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 			}
 
 			for(i = 0; i < 4; i++) {
-				squareColor[i] = GameData_getColor(phase - 1, activePiece->color, i);
+				squareColor[i] = GameData_getColor(game->phase - 1, game->activePiece.color, i);
 				cond_check(squareColor[i], "function \"GameData_getColor\" returned an error");
 			}
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 				ICoord square = {j, i};
 				int index = getFieldIndex(square);
 				rc_check(index, "getFieldIndex");
-				int color = playfield[index];
+				int color = game->playfield[index];
 				if(color == C_EMPTY) {
 					continue;
 				}
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
-	destroy();
+	destroyGame(game);
 	return EXIT_SUCCESS;
 
 sdlerr:
@@ -197,11 +197,11 @@ error:
 	if(event) {
 		free(event);
 	}
-	destroy();
+	destroyGame(game);
 	return EXIT_FAILURE;
 }
 
-void print_playfield()
+void print_playfield(State* game)
 {
 	int i = 0;
 	int j = 0;
@@ -211,7 +211,7 @@ void print_playfield()
 			int index = getFieldIndex(square);
 			rc_check(index, "getFieldIndex");
 
-			if(playfield[index] == C_EMPTY) {
+			if(game->playfield[index] == C_EMPTY) {
 				printf(". ");
 			} else {
 				printf("# ");
