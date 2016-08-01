@@ -37,6 +37,7 @@ char* print_ICoord(ICoord data);
 char* print_ICoord_p(const ICoord* data);
 char* print_int(int value);
 char* print_Piece_p(Piece* piece);
+char* print_uint8_t_p(const uint8_t* value);
 
 // testing functions
 void test_ICoord_shift();
@@ -44,6 +45,7 @@ void test_ICoord_shift();
 void test_GameData_init();
 void test_GameData_getSquare();
 void test_GameData_getSpawn();
+void test_GameData_getColor();
 
 void test_init();
 void test_getFieldIndex();
@@ -62,6 +64,7 @@ int main(int argc, char *argv[])
 	test_GameData_init();
 	test_GameData_getSquare();
 	test_GameData_getSpawn();
+	test_GameData_getColor();
 	test_init();
 	test_getFieldIndex();
 	test_nextPiece();
@@ -132,64 +135,64 @@ void test_GameData_getSquare()
 	struct TestData tests[numTests];
 
 	// valid - boundary checks
-	tests[0].arg_color = RED;
-	tests[0].arg_orientation = NORTH;
+	tests[0].arg_color = C_RED;
+	tests[0].arg_orientation = O_NORTH;
 	tests[0].arg_num = 0;
 	tests[0].result = malloc(sizeof(ICoord));
 	alloc_check(tests[0].result);
 	tests[0].result->x = 0;
 	tests[0].result->y = 2;
 
-	tests[1].arg_color = RED;
-	tests[1].arg_orientation = NORTH;
+	tests[1].arg_color = C_RED;
+	tests[1].arg_orientation = O_NORTH;
 	tests[1].arg_num = 3;
 	tests[1].result = malloc(sizeof(ICoord));
 	alloc_check(tests[1].result);
 	tests[1].result->x = 3;
 	tests[1].result->y = 2;
 
-	tests[2].arg_color = RED;
-	tests[2].arg_orientation = WEST;
+	tests[2].arg_color = C_RED;
+	tests[2].arg_orientation = O_WEST;
 	tests[2].arg_num = 0;
 	tests[2].result = malloc(sizeof(ICoord));
 	alloc_check(tests[2].result);
 	tests[2].result->x = 2;
 	tests[2].result->y = 0;
 
-	tests[3].arg_color = RED;
-	tests[3].arg_orientation = WEST;
+	tests[3].arg_color = C_RED;
+	tests[3].arg_orientation = O_WEST;
 	tests[3].arg_num = 3;
 	tests[3].result = malloc(sizeof(ICoord));
 	alloc_check(tests[3].result);
 	tests[3].result->x = 2;
 	tests[3].result->y = 3;
 
-	tests[4].arg_color = GREEN;
-	tests[4].arg_orientation = NORTH;
+	tests[4].arg_color = C_GREEN;
+	tests[4].arg_orientation = O_NORTH;
 	tests[4].arg_num = 0;
 	tests[4].result = malloc(sizeof(ICoord));
 	alloc_check(tests[4].result);
 	tests[4].result->x = 0;
 	tests[4].result->y = 1;
 
-	tests[5].arg_color = GREEN;
-	tests[5].arg_orientation = NORTH;
+	tests[5].arg_color = C_GREEN;
+	tests[5].arg_orientation = O_NORTH;
 	tests[5].arg_num = 3;
 	tests[5].result = malloc(sizeof(ICoord));
 	alloc_check(tests[5].result);
 	tests[5].result->x = 2;
 	tests[5].result->y = 0;
 
-	tests[6].arg_color = GREEN;
-	tests[6].arg_orientation = WEST;
+	tests[6].arg_color = C_GREEN;
+	tests[6].arg_orientation = O_WEST;
 	tests[6].arg_num = 0;
 	tests[6].result = malloc(sizeof(ICoord));
 	alloc_check(tests[6].result);
 	tests[6].result->x = 1;
 	tests[6].result->y = 0;
 
-	tests[7].arg_color = GREEN;
-	tests[7].arg_orientation = WEST;
+	tests[7].arg_color = C_GREEN;
+	tests[7].arg_orientation = O_WEST;
 	tests[7].arg_num = 3;
 	tests[7].result = malloc(sizeof(ICoord));
 	alloc_check(tests[7].result);
@@ -207,28 +210,28 @@ void test_GameData_getSquare()
 	}
 
 	// invalid via loops
-	int invColors[6] = {EMPTY, DESTROYED, 9, 12354, -1, -54778};
-	int invOrientations[5] = {NONE, 6, 432170, -1, -93478};
+	int invColors[6] = {C_EMPTY, C_DESTROYED, 9, 12354, -1, -54778};
+	int invOrientations[5] = {O_NONE, 6, 432170, -1, -93478};
 	int invNums[4] = {4, 53278, -1, -157890};
 
 	for(i = 0; i < 6; i++) {
 		test_function(print_ICoord_p, GameData_getSquare, NULL,
 				invColors[i],
-				EAST,
+				O_EAST,
 				1);
 	}
 
 	for(i = 0; i < 5; i++) {
 		test_function(print_ICoord_p, GameData_getSquare, NULL,
-				ORANGE,
+				C_ORANGE,
 				invOrientations[i],
 				1);
 	}
 
 	for(i = 0; i < 4; i++) {
 		test_function(print_ICoord_p, GameData_getSquare, NULL,
-				ORANGE,
-				EAST,
+				C_ORANGE,
+				O_EAST,
 				invNums[i]);
 	}
 
@@ -244,7 +247,7 @@ void test_GameData_getSquare()
 	for(i = 0; i < 5; i++) {
 		for(j = 0; j < 4; j++) {
 			test_function(print_ICoord_p, GameData_getSquare, NULL,
-					ORANGE,
+					C_ORANGE,
 					invOrientations[i],
 					invNums[j]);
 		}
@@ -270,6 +273,132 @@ error:	// fallthrough
 	}
 }
 
+void test_GameData_getColor()
+{
+	int i = 0;
+	int j = 0;
+	int k = 0;
+
+	struct TestData {
+		int arg_phase;
+		int arg_color;
+		int arg_num;
+		uint8_t result;
+	};
+
+	int numTests = 8;
+	struct TestData tests[numTests];
+
+	// valid (boundary checks)
+	tests[0].arg_phase = P_LOAD;
+	tests[0].arg_color = C_RED;
+	tests[0].arg_num = 0;
+	tests[0].result = 0xff;
+
+	tests[1].arg_phase = P_LOAD;
+	tests[1].arg_color = C_RED;
+	tests[1].arg_num = 3;
+	tests[1].result = 0xff;
+
+	tests[2].arg_phase = P_LOAD;
+	tests[2].arg_color = C_DESTROYED;
+	tests[2].arg_num = 0;
+	tests[2].result = 0xff;
+
+	tests[3].arg_phase = P_LOAD;
+	tests[3].arg_color = C_DESTROYED;
+	tests[3].arg_num = 3;
+	tests[3].result = 0xff;
+
+	tests[4].arg_phase = P_LOCK;
+	tests[4].arg_color = C_RED;
+	tests[4].arg_num = 0;
+	tests[4].result = 0xbb;
+
+	tests[5].arg_phase = P_LOCK;
+	tests[5].arg_color = C_RED;
+	tests[5].arg_num = 3;
+	tests[5].result = 0xff;
+
+	tests[6].arg_phase = P_LOCK;
+	tests[6].arg_color = C_DESTROYED;
+	tests[6].arg_num = 0;
+	tests[6].result = 0xff;
+
+	tests[7].arg_phase = P_LOCK;
+	tests[7].arg_color = C_DESTROYED;
+	tests[7].arg_num = 3;
+	tests[7].result = 0xff;
+
+	rc_check(GameData_init(), "GameData_init");
+
+	for(i = 0; i < numTests; i++) {
+		test_function(print_uint8_t_p, GameData_getColor,
+				&tests[i].result,
+				tests[i].arg_phase,
+				tests[i].arg_color,
+				tests[i].arg_num);
+	}
+
+	// invalid via loops
+	int invPhases[5] = {P_CLEAR, 4, 472389, -1, -8905};
+	int invColors[4] = {-1, -43280954, 9, 78923};
+	int invNums[4] = {-1, -823467, 4, 6724386};
+
+	for(i = 0; i < 5; i++) {
+		test_function(print_uint8_t_p, GameData_getColor, NULL,
+				invPhases[i],
+				C_YELLOW,
+				2);
+	}
+
+	for(i = 0; i < 4; i++) {
+		test_function(print_uint8_t_p, GameData_getColor, NULL,
+				P_DROP,
+				invColors[i],
+				2);
+	}
+
+	for(i = 0; i < 4; i++) {
+		test_function(print_uint8_t_p, GameData_getColor, NULL,
+				P_DROP,
+				C_YELLOW,
+				invNums[i]);
+	}
+
+	for(i = 0; i < 5; i++) {
+		for(j = 0; j < 4; j++) {
+			test_function(print_uint8_t_p, GameData_getColor, NULL,
+					invPhases[i],
+					invColors[j],
+					2);
+		}
+	}
+
+	for(i = 0; i < 4; i++) {
+		for(j = 0; j < 4; j++) {
+			test_function(print_uint8_t_p, GameData_getColor, NULL,
+					P_DROP,
+					invColors[i],
+					invNums[j]);
+		}
+	}
+
+	for(i = 0; i < 5; i++) {
+		for(j = 0; j < 4; j++) {
+			for(k = 0; k < 4; k++) {
+				test_function(print_uint8_t_p, GameData_getColor, NULL,
+						invPhases[i],
+						invColors[j],
+						invNums[k]);
+			}
+		}
+	}
+
+error:	// fallthrough
+	GameData_destroy();
+}
+
 char* print_ICoord(ICoord data)
 {
 	return make_string(2 * (3 * sizeof(int)), "{%d, %d}", data.x, data.y);
@@ -287,7 +416,16 @@ char* print_ICoord_p(const ICoord* data)
 
 char* print_int(int value)
 {
-	return make_string(3 * sizeof(int), "%d", value);
+	return make_string(6 * sizeof(int), "%d", value);
+}
+
+char* print_uint8_t_p(const uint8_t* value)
+{
+	if(value) {
+		return make_string(3 * sizeof(uint8_t), "%X", *value);
+	} else {
+		return NULL;
+	}
 }
 
 void test_init()
@@ -367,7 +505,7 @@ void test_nextPiece()
 	for(i = 0; i < 4; i++) {
 		int index = getFieldIndex(blockPositions[i]);
 		rc_check(index, "getFieldIndex");
-		playfield[index] = YELLOW;
+		playfield[index] = C_YELLOW;
 	}
 
 	test_function(print_int, nextPiece, 0);
@@ -440,8 +578,8 @@ void test_rotateLeft()
 	test_function(print_int, rotateLeft, 0);
 
 	// manipulate active Piece to be an I at the left wall to simulate wall collision
-	activePiece->color = RED;
-	activePiece->orientation = EAST;
+	activePiece->color = C_RED;
+	activePiece->orientation = O_EAST;
 	activePiece->position.x = -2;
 	activePiece->position.y = 12;
 	test_function(print_int, rotateLeft, 0);
@@ -465,8 +603,8 @@ void test_rotateRight()
 	test_function(print_int, rotateRight, 0);
 
 	// manipulate active Piece to be an I at the left wall to simulate wall collision
-	activePiece->color = RED;
-	activePiece->orientation = EAST;
+	activePiece->color = C_RED;
+	activePiece->orientation = O_EAST;
 	activePiece->position.x = -2;
 	activePiece->position.y = 12;
 	test_function(print_int, rotateRight, 0);
@@ -491,7 +629,7 @@ void test_markLines()
 	int line_start = 4 * FIELD_WIDTH;
 	int i = 0;
 	for(i = 0; i < FIELD_WIDTH; i++) {
-		playfield[line_start + i] = BLUE;
+		playfield[line_start + i] = C_BLUE;
 	}
 	test_function(print_int, markLines, 1);
 	test_function(print_int, markLines, 0);
@@ -514,7 +652,7 @@ void test_clearLines()
 	int line_start = 4 * FIELD_WIDTH;
 	int i = 0;
 	for(i = 0; i < FIELD_WIDTH; i++) {
-		playfield[line_start + i] = DESTROYED;
+		playfield[line_start + i] = C_DESTROYED;
 	}
 	test_function(print_int, clearLines, 1);
 	test_function(print_int, clearLines, 0);
@@ -536,9 +674,9 @@ void test_GameData_getSpawn()
 		{3, 18}
 	};
 	int arg_color[3] = {
-		RED,
-		GREEN,
-		BLUE
+		C_RED,
+		C_GREEN,
+		C_BLUE
 	};
 
 	rc_check(GameData_init(), "GameData_init");
@@ -550,10 +688,11 @@ void test_GameData_getSpawn()
 
 	test_function(print_ICoord_p, GameData_getSpawn, NULL, -1);
 	test_function(print_ICoord_p, GameData_getSpawn, NULL, -49874);
-	test_function(print_ICoord_p, GameData_getSpawn, NULL, EMPTY);
+	test_function(print_ICoord_p, GameData_getSpawn, NULL, C_EMPTY);
 	test_function(print_ICoord_p, GameData_getSpawn, NULL, 9);
 	test_function(print_ICoord_p, GameData_getSpawn, NULL, 789532);
 
+	GameData_destroy();
 error:
 	;	// nothing
 }

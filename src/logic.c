@@ -29,18 +29,18 @@ int init()
 			index = getFieldIndex(current);
 			rc_check(index, "getFieldIndex");
 
-			playfield[index] = EMPTY;
+			playfield[index] = C_EMPTY;
 		}
 	}
 
 	// setup randomizer
 	srand(time(NULL));
 
-	history = calloc(HISTORY, sizeof(int));
+	history = calloc(RAND_HISTORY, sizeof(int));
 	alloc_check(history);
 
-	for(i = 0; i < HISTORY; i++) {
-		history[i] = EMPTY;
+	for(i = 0; i < RAND_HISTORY; i++) {
+		history[i] = C_EMPTY;
 	}
 
 	activePiece = NULL;
@@ -76,23 +76,23 @@ int nextPiece()
 {
 	global_check(history, "history");
 
-	int result = EMPTY;
+	int result = C_EMPTY;
 	int triesLeft = RAND_TRIES;
 	int valid = 0;
 
 	while((triesLeft-- > 0) && (!valid)) {
-		result = rand() % EMPTY;
+		result = rand() % C_EMPTY;
 		valid = 1;
 
 		int i = 0;
-		for(i = 0; i < HISTORY; i++) {
+		for(i = 0; i < RAND_HISTORY; i++) {
 			if(result == history[i]) {
 				valid = 0;
 				break;
 			}
 		}
 	}
-	int* rp = memmove(&history[1], &history[0], (HISTORY - 1) * sizeof(int));
+	int* rp = memmove(&history[1], &history[0], (RAND_HISTORY - 1) * sizeof(int));
 	cond_check(rp == &history[1], "memory move failed");
 	history[0] = result;
 
@@ -101,7 +101,7 @@ int nextPiece()
 		alloc_check(activePiece);
 	}
 	activePiece->color = result;
-	activePiece->orientation = NORTH;
+	activePiece->orientation = O_NORTH;
 	activePiece->position = *GameData_getSpawn(result);
 
 	int coll = checkCollision(activePiece->position, activePiece->orientation);
@@ -204,17 +204,17 @@ int checkCollision(ICoord newPosition, int newOrientation)
 
 		int index = getFieldIndex(checkSquare);
 		rc_check(index, "getFieldIndex");
-		if(playfield[index] != EMPTY) {
+		if(playfield[index] != C_EMPTY) {
 			return 1;
 		}
 
 		int maxOffset = 0;
 		switch(activePiece->color) {
-		case RED:
+		case C_RED:
 			maxOffset = 3;
 			break;
 
-		case YELLOW:
+		case C_YELLOW:
 			maxOffset = 1;
 			break;
 
@@ -237,7 +237,7 @@ int rotateRight()
 {
 	global_check(activePiece, "activePiece");
 
-	int newOrientation = (activePiece->orientation + 1) % NONE;
+	int newOrientation = (activePiece->orientation + 1) % O_NONE;
 	int coll = checkCollision(activePiece->position, newOrientation);
 	rc_check(coll, "checkCollision");
 	if(!coll) {
@@ -255,7 +255,7 @@ int rotateLeft()
 
 	int newOrientation = activePiece->orientation - 1;
 	if(newOrientation < 0) {
-		newOrientation += NONE;
+		newOrientation += O_NONE;
 	}
 
 	int coll = checkCollision(activePiece->position, newOrientation);
@@ -306,7 +306,7 @@ int markLines()
 			square.y = i;
 			index = getFieldIndex(square);
 			rc_check(index, "getFieldIndex");
-			if((playfield[index] == EMPTY) || (playfield[index] == DESTROYED)) {
+			if((playfield[index] == C_EMPTY) || (playfield[index] == C_DESTROYED)) {
 				complete = 0;
 				break;
 			}
@@ -318,7 +318,7 @@ int markLines()
 				square.y = i;
 				index = getFieldIndex(square);
 				rc_check(index, "getFieldIndex");
-				playfield[index] = DESTROYED;
+				playfield[index] = C_DESTROYED;
 			}
 			counter++;
 		}
@@ -340,12 +340,12 @@ int clearLines()
 
 	for(i = 0; i < FIELD_HEIGHT; i++) {
 		lineIndex = i * FIELD_WIDTH;
-		if(playfield[lineIndex] == DESTROYED) {
+		if(playfield[lineIndex] == C_DESTROYED) {
 			int* rp = memmove(&playfield[lineIndex], &playfield[lineIndex + FIELD_WIDTH],
 					(FIELD_WIDTH * FIELD_HEIGHT) - lineIndex);
 			cond_check(rp == &playfield[lineIndex], "memory move failed");
 			for(j = 0; j < FIELD_WIDTH; j++) {
-				playfield[(FIELD_WIDTH * (FIELD_HEIGHT - 1)) + j] = EMPTY;
+				playfield[(FIELD_WIDTH * (FIELD_HEIGHT - 1)) + j] = C_EMPTY;
 			}
 			counter++;
 		}

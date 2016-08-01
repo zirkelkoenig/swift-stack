@@ -4,17 +4,6 @@
 #include "game_data.h"
 #include "math_data.h"
 
-#define FIELD_WIDTH 10
-#define FIELD_HEIGHT 20
-#define RAND_TRIES 4
-#define HISTORY 4
-
-typedef struct Piece {
-	int color;
-	int orientation;
-	ICoord position;
-} Piece;
-
 int* playfield;
 
 Piece* activePiece;

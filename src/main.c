@@ -6,53 +6,6 @@
 #include "math_data.h"
 
 #define PPS 32
-#define GRAVITY 10.0
-#define LOAD_DELAY 30
-#define LOCK_DELAY 30
-#define CLEAR_DELAY 30
-
-enum Phase {
-	P_LOAD,
-	P_DROP,
-	P_LOCK,
-	P_CLEAR
-};
-
-uint8_t activeColors[DESTROYED + 1][4] = {
-	{0xff, 0x00, 0x00, 0xff},
-	{0xff, 0x77, 0x00, 0xff},
-	{0x00, 0x00, 0xff, 0xff},
-	{0xff, 0xff, 0x00, 0xff},
-	{0xff, 0x00, 0xff, 0xff},
-	{0x00, 0xff, 0xff, 0xff},
-	{0x00, 0xff, 0x00, 0xff},
-	{0x00, 0x00, 0x00, 0xff},
-	{0xff, 0xff, 0xff, 0xff}
-};
-
-uint8_t lockingColors[DESTROYED + 1][4] = {
-	{0xff, 0x77, 0x77, 0xff},
-	{0xff, 0xbb, 0x77, 0xff},
-	{0x77, 0x77, 0xff, 0xff},
-	{0xff, 0xff, 0x77, 0xff},
-	{0xff, 0x77, 0xff, 0xff},
-	{0x77, 0xff, 0xff, 0xff},
-	{0x77, 0xff, 0x77, 0xff},
-	{0x00, 0x00, 0x00, 0xff},
-	{0xff, 0xff, 0xff, 0xff}
-};
-
-uint8_t stackColors[DESTROYED + 1][4] = {
-	{0xbb, 0x00, 0x00, 0xff},
-	{0xdd, 0x77, 0x00, 0xff},
-	{0x00, 0x00, 0xbb, 0xff},
-	{0xdd, 0xdd, 0x00, 0xff},
-	{0xdd, 0x00, 0xdd, 0xff},
-	{0x00, 0xdd, 0xdd, 0xff},
-	{0x00, 0xdd, 0x00, 0xff},
-	{0x00, 0x00, 0x00, 0xff},
-	{0xff, 0xff, 0xff, 0xff}
-};
 
 int phase;
 
@@ -82,7 +35,9 @@ int main(int argc, char *argv[])
 	SDL_Event* event = malloc(sizeof(SDL_Event));
 	int i = 0;
 	int j = 0;
+	int k = 0;
 	int rc = 0;
+	const uint8_t *squareColor[4];
 
 	while(!quit) {
 		switch(phase) {
@@ -168,21 +123,17 @@ int main(int argc, char *argv[])
 				rects[i].h = -PPS;
 			}
 
-			if(phase == P_LOCK) {
-				int rc = SDL_SetRenderDrawColor(renderer,
-						lockingColors[activePiece->color][0],
-						lockingColors[activePiece->color][1],
-						lockingColors[activePiece->color][2],
-						lockingColors[activePiece->color][3]);
-				sdl_check(rc == 0);
-			} else {
-				int rc = SDL_SetRenderDrawColor(renderer,
-						activeColors[activePiece->color][0],
-						activeColors[activePiece->color][1],
-						activeColors[activePiece->color][2],
-						activeColors[activePiece->color][3]);
-				sdl_check(rc == 0);
+			for(i = 0; i < 4; i++) {
+				squareColor[i] = GameData_getColor(phase - 1, activePiece->color, i);
+				cond_check(squareColor[i], "function \"GameData_getColor\" returned an error");
 			}
+
+			int rc = SDL_SetRenderDrawColor(renderer,
+					*squareColor[0],
+					*squareColor[1],
+					*squareColor[2],
+					*squareColor[3]);
+			sdl_check(rc == 0);
 
 			sdl_check(SDL_RenderFillRects(renderer, rects, 4) == 0);
 		}
@@ -194,7 +145,7 @@ int main(int argc, char *argv[])
 				int index = getFieldIndex(square);
 				rc_check(index, "getFieldIndex");
 				int color = playfield[index];
-				if(color == EMPTY) {
+				if(color == C_EMPTY) {
 					continue;
 				}
 
@@ -205,11 +156,16 @@ int main(int argc, char *argv[])
 					-PPS
 				};
 
+				for(k = 0; k < 4; k++) {
+					squareColor[k] = GameData_getColor(P_LOCK, color, k);
+					cond_check(squareColor[k], "function \"GameData_getColor\" returned an error");
+				}
+
 				int rc = SDL_SetRenderDrawColor(renderer,
-					stackColors[color][0],
-					stackColors[color][1],
-					stackColors[color][2],
-					stackColors[color][3]);
+						*squareColor[0],
+						*squareColor[1],
+						*squareColor[2],
+						*squareColor[3]);
 				sdl_check(rc == 0);
 
 				sdl_check(SDL_RenderFillRect(renderer, &rect) == 0);
@@ -255,7 +211,7 @@ void print_playfield()
 			int index = getFieldIndex(square);
 			rc_check(index, "getFieldIndex");
 
-			if(playfield[index] == EMPTY) {
+			if(playfield[index] == C_EMPTY) {
 				printf(". ");
 			} else {
 				printf("# ");
