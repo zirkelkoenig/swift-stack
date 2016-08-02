@@ -13,7 +13,6 @@ State* newGame()
 	int i = 0;
 	int j = 0;
 	int index = 0;
-	ICoord current = {0, 0};
 
 	// create a new game state
 	State* state = malloc(sizeof(State));
@@ -27,10 +26,7 @@ State* newGame()
 
 	for(i = 0; i < FIELD_WIDTH; i++) {
 		for(j = 0; j < FIELD_HEIGHT; j++) {
-			current.x = i;
-			current.y = j;
-
-			index = getFieldIndex(current);
+			index = getFieldIndex(i, j);
 			rc_check(index, "getFieldIndex");
 
 			state->playfield[index] = C_EMPTY;
@@ -63,15 +59,12 @@ error:
 	return NULL;
 }
 
-int getFieldIndex(ICoord square)
+int getFieldIndex(int x, int y)
 {
-	cond_check(square.x >= 0 &&
-			square.x < FIELD_WIDTH &&
-			square.y >= 0 &&
-			square.y < FIELD_HEIGHT,
-			"argument \"square\" out of bounds");
-	return square.x + (square.y * FIELD_WIDTH);
+	cond_check((x >= 0) && (x < FIELD_WIDTH), "argument \"x\" out of bounds");
+	cond_check((y >= 0) && (y < FIELD_HEIGHT), "argument \"y\" out of bounds");
 
+	return x + (y * FIELD_WIDTH);
 error:
 	return -1;
 }
@@ -126,11 +119,11 @@ int lock(State* state)
 
 	int i = 0;
 	for(i = 0; i < 4; i++) {
-		const ICoord *current = GameData_getSquare(state->activePiece.color, state->activePiece.orientation, i);
-		cond_check(current, "function \"GameData_getSquare\" returned an error");
+		const ICoord *square= GameData_getSquare(state->activePiece.color, state->activePiece.orientation, i);
+		cond_check(square, "function \"GameData_getSquare\" returned an error");
 
-		int index = getFieldIndex(ICoord_shift(*current, state->activePiece.position.x,
-				state->activePiece.position.y));
+		ICoord current = ICoord_shift(*square, state->activePiece.position.x, state->activePiece.position.y);
+		int index = getFieldIndex(current.x, current.y);
 		rc_check(index, "getFieldIndex");
 
 		state->playfield[index] = state->activePiece.color;
@@ -204,7 +197,7 @@ int checkCollision(State* state, ICoord newPosition, int newOrientation)
 			return 1;
 		}
 
-		int index = getFieldIndex(checkSquare);
+		int index = getFieldIndex(checkSquare.x, checkSquare.y);
 		rc_check(index, "getFieldIndex");
 		if(state->playfield[index] != C_EMPTY) {
 			return 1;
@@ -294,20 +287,16 @@ int markLines(State* state)
 
 	int i = 0;
 	int j = 0;
-	int index = 0;
-	int complete = 1;
 	int counter = 0;
-	ICoord square = {0, 0};
 
 	for(i = 0; i < FIELD_HEIGHT; i++) {
-		complete = 1;
+		int complete = 1;
 
 		for(j = 0; j < FIELD_WIDTH; j++) {
-			square.x = j;
-			square.y = i;
-			index = getFieldIndex(square);
+			int index = getFieldIndex(j, i);
 			rc_check(index, "getFieldIndex");
-			if((state->playfield[index] == C_EMPTY) || (state->playfield[index] == C_DESTROYED)) {
+
+			if((state->playfield[index] < C_RED) || (state->playfield[index] > C_GREEN)) {
 				complete = 0;
 				break;
 			}
@@ -315,10 +304,8 @@ int markLines(State* state)
 
 		if(complete) {
 			for(j = 0; j < FIELD_WIDTH; j++) {
-				square.x = j;
-				square.y = i;
-				index = getFieldIndex(square);
-				rc_check(index, "getFieldIndex");
+				int index = getFieldIndex(j, i);
+				rc_check(index, "getFieldWidth");
 				state->playfield[index] = C_DESTROYED;
 			}
 			counter++;
@@ -337,19 +324,31 @@ int clearLines(State* state)
 
 	int i = 0;
 	int j = 0;
-	int lineIndex = 0;
 	int counter = 0;
 
 	for(i = 0; i < FIELD_HEIGHT; i++) {
-		lineIndex = i * FIELD_WIDTH;
-		if(state->playfield[lineIndex] == C_DESTROYED) {
-			int* rp = memmove(&state->playfield[lineIndex], &state->playfield[lineIndex + FIELD_WIDTH],
-					(FIELD_WIDTH * FIELD_HEIGHT) - lineIndex);
-			cond_check(rp == &state->playfield[lineIndex], "memory move failed");
+		int dstIndex = getFieldIndex(0, i);
+		rc_check(dstIndex, "getFieldIndex");
+
+		if(state->playfield[dstIndex] == C_DESTROYED) {
+			int srcIndex = getFieldIndex(0, i + 1);
+			rc_check(srcIndex, "getFieldIndex");
+			int moveLength = getFieldIndex(FIELD_WIDTH - 1, FIELD_HEIGHT - 1);
+			rc_check(moveLength, "getFieldIndex");
+			moveLength -= srcIndex;
+
+			int* rp = memmove(&state->playfield[dstIndex], &state->playfield[srcIndex],
+					moveLength * sizeof(int));
+			cond_check(rp == &state->playfield[dstIndex], "memory move failed");
+
 			for(j = 0; j < FIELD_WIDTH; j++) {
-				state->playfield[(FIELD_WIDTH * (FIELD_HEIGHT - 1)) + j] = C_EMPTY;
+				int index = getFieldIndex(j, FIELD_HEIGHT - 1);
+				rc_check(index, "getFieldIndex");
+				state->playfield[index] = C_EMPTY;
 			}
+
 			counter++;
+			i--;
 		}
 	}
 	return counter;

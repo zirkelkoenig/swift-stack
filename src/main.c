@@ -80,6 +80,8 @@ int main(int argc, char *argv[])
 				game->phase = rc ? P_CLEAR : P_LOAD;
 				counter = 0;
 			} else {
+				rc = moveDown(game, -20);
+				rc_check(rc, "moveDown");
 				counter++;
 			}
 			break;
@@ -100,6 +102,33 @@ int main(int argc, char *argv[])
 			switch(event->type) {
 			case SDL_QUIT:
 				quit = 1;
+				break;
+
+			case SDL_KEYDOWN:
+				if((game->phase != P_DROP) && (game->phase != P_LOCK)) {
+					break;
+				}
+				switch(event->key.keysym.scancode) {
+				case SDL_SCANCODE_J:
+				case SDL_SCANCODE_L:
+					rc_check(rotateLeft(game), "rotateLeft");
+					break;
+
+				case SDL_SCANCODE_K:
+					rc_check(rotateRight(game), "rotateRight");
+					break;
+
+				case SDL_SCANCODE_F:
+					rc_check(moveHorizontal(game, 1), "moveHorizontal");
+					break;
+
+				case SDL_SCANCODE_S:
+					rc_check(moveHorizontal(game, -1), "moveHorizontal");
+					break;
+
+				default:	// do nothing
+					break;
+				}
 				break;
 			}
 		}
@@ -141,8 +170,7 @@ int main(int argc, char *argv[])
 		// stack
 		for(i = 0; i < FIELD_HEIGHT; i++) {
 			for(j = 0; j < FIELD_WIDTH; j++) {
-				ICoord square = {j, i};
-				int index = getFieldIndex(square);
+				int index = getFieldIndex(j, i);
 				rc_check(index, "getFieldIndex");
 				int color = game->playfield[index];
 				if(color == C_EMPTY) {
@@ -150,8 +178,8 @@ int main(int argc, char *argv[])
 				}
 
 				SDL_Rect rect = {
-					square.x * PPS,
-					(FIELD_HEIGHT - square.y) * PPS,
+					j * PPS,
+					(FIELD_HEIGHT - i) * PPS,
 					PPS,
 					-PPS
 				};
@@ -172,8 +200,21 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		SDL_RenderPresent(renderer);
+		// upper boundary
+		for(i = 0; i < FIELD_WIDTH; i++) {
+			SDL_Rect rect = {
+				i * PPS,
+				(FIELD_HEIGHT - 20) * PPS,
+				PPS,
+				-PPS
+			};
 
+			int rc = SDL_SetRenderDrawColor(renderer, 0x77, 0x77, 0x77, 0xff);
+			sdl_check(rc == 0);
+			sdl_check(SDL_RenderFillRect(renderer, &rect) == 0);
+		}
+
+		SDL_RenderPresent(renderer);
 		SDL_Delay(16);
 	}
 
@@ -207,8 +248,7 @@ void print_playfield(State* game)
 	int j = 0;
 	for(i = 0; i < FIELD_HEIGHT; i++) {
 		for(j = 0; j < FIELD_WIDTH; j++) {
-			ICoord square = {j, i};
-			int index = getFieldIndex(square);
+			int index = getFieldIndex(j, i);
 			rc_check(index, "getFieldIndex");
 
 			if(game->playfield[index] == C_EMPTY) {

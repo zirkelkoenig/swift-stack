@@ -431,47 +431,45 @@ char* print_uint8_t_p(const uint8_t* value)
 void test_getFieldIndex()
 {
 	int numTests = 3;
-	ICoord arg_square[numTests];
+	int arg_x[numTests];
+	int arg_y[numTests];
 	int result[numTests];
 	int i = 0;
 	int j = 0;
 
 	// valid
-	arg_square[0].x = 0;
-	arg_square[0].y = 0;
+	arg_x[0] = 0;
+	arg_y[0] = 0;
 	result[0] = 0;
 
-	arg_square[1].x = 9;
-	arg_square[1].y = 19;
+	arg_x[1] = 9;
+	arg_y[1] = 19;
 	result[1] = 199;
 
-	arg_square[2].x = 7;
-	arg_square[2].y = 12;
+	arg_x[2] = 7;
+	arg_y[2] = 12;
 	result[2] = 127;
 
 	for(i = 0; i < numTests; i++) {
-		test_function(print_int, getFieldIndex, result[i], arg_square[i]);
+		test_function(print_int, getFieldIndex, result[i], arg_x[i], arg_y[i]);
 	}
 
 	// invalid loops
 
 	int invX[4] = {-1, -253789, 10, 57089};
-	int invY[4] = {-1, -52370952, 20, 7482398};
+	int invY[4] = {-1, -52370952, 23, 7482398};
 
 	for(i = 0; i < 4; i++) {
-		ICoord arg = {7, invY[i]};
-		test_function(print_int, getFieldIndex, -1, arg);
+		test_function(print_int, getFieldIndex, -1, 7, invY[i]);
 	}
 
 	for(i = 0; i < 4; i++) {
-		ICoord arg = {invX[i], 12};
-		test_function(print_int, getFieldIndex, -1, arg);
+		test_function(print_int, getFieldIndex, -1, invX[i], 12);
 	}
 
 	for(i = 0; i < 4; i++) {
 		for(j = 0; j < 4; j++) {
-			ICoord arg = {invX[i], invY[j]};
-			test_function(print_int, getFieldIndex, -1, arg);
+			test_function(print_int, getFieldIndex, -1, invX[i], invY[i]);
 		}
 	}
 }
@@ -499,7 +497,7 @@ void test_nextPiece()
 	};
 
 	for(i = 0; i < 4; i++) {
-		int index = getFieldIndex(blockPositions[i]);
+		int index = getFieldIndex(blockPositions[i].x, blockPositions[i].y);
 		rc_check(index, "getFieldIndex");
 		game->playfield[index] = C_YELLOW;
 	}

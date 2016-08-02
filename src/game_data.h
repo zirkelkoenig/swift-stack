@@ -5,12 +5,12 @@
 #include "math_data.h"
 
 #define FIELD_WIDTH 10
-#define FIELD_HEIGHT 20
+#define FIELD_HEIGHT (20 + 3)
 
 #define RAND_TRIES 4
 #define RAND_HISTORY 4
 
-#define GRAVITY 10.0
+#define GRAVITY 30.0
 #define LOAD_DELAY 30
 #define	LOCK_DELAY 30
 #define CLEAR_DELAY 30

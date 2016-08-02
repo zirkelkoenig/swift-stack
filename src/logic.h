@@ -8,7 +8,7 @@
 State* newGame();
 
 /* Returns the index in the playfield array for a given position and -1 on errors. */
-int getFieldIndex(ICoord square);
+int getFieldIndex(int x, int y);
 
 /* Pseudo-randomly generates and spawns the next piece. Returns 0 when placement failes due to collisions (= game
 over), 1 on succes and -1 on error. */
