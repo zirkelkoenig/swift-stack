@@ -126,6 +126,12 @@ int main(int argc, char *argv[])
 					rc_check(moveHorizontal(game, -1), "moveHorizontal");
 					break;
 
+				case SDL_SCANCODE_D:
+					rc_check(moveDown(game, -20), "moveDown");
+					game->phase = P_LOCK;
+					counter = 0;
+					break;
+
 				default:	// do nothing
 					break;
 				}
