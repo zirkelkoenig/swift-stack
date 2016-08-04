@@ -53,8 +53,7 @@ void test_nextPiece();
 void test_lock();
 void test_moveHorizontal();
 void test_moveDown();
-void test_rotateLeft();
-void test_rotateRight();
+void test_rotate();
 void test_markLines();
 void test_clearLines();
 
@@ -71,8 +70,7 @@ int main(int argc, char *argv[])
 	test_lock();
 	test_moveHorizontal();
 	test_moveDown();
-	test_rotateLeft();
-	test_rotateRight();
+	test_rotate();
 	test_markLines();
 	test_clearLines();
 
@@ -570,53 +568,29 @@ error:	// fallthrough
 	destroyGame(game);
 }
 
-void test_rotateLeft()
+void test_rotate()
 {
 	State* game = newGame();
 	rc_check(game, "newGame");
 	rc_check(nextPiece(game), "nextPiece");
 	rc_check(moveDown(game, -2), "moveDown");
-	test_function(print_int, rotateLeft, 0, game);
+	test_function(print_int, rotate, 0, game, -1);
+	test_function(print_int, rotate, 0, game, 1);
 
 	// manipulate active Piece to be an I at the left wall to simulate wall collision
 	game->activePiece.color = C_RED;
 	game->activePiece.orientation = O_EAST;
 	game->activePiece.position.x = -2;
 	game->activePiece.position.y = 12;
-	test_function(print_int, rotateLeft, 0, game);
+	test_function(print_int, rotate, 0, game, -1);
+	test_function(print_int, rotate, 0, game, 1);
 
 	rc_check(lock(game), "lock");
-	test_function(print_int, rotateLeft, -1, game);
+	test_function(print_int, rotate, -1, game, 1);
 
 	rc_check(nextPiece(game), "nextPiece");
 	rc_check(moveDown(game, -2), "moveDown");
-	test_function(print_int, rotateLeft, 0, game);
-
-error:	// fallthrough
-	destroyGame(game);
-}
-
-void test_rotateRight()
-{
-	State* game = newGame();
-	rc_check(game, "newGame");
-	rc_check(nextPiece(game), "nextPiece");
-	rc_check(moveDown(game, -2), "moveDown");
-	test_function(print_int, rotateRight, 0, game);
-
-	// manipulate active Piece to be an I at the left wall to simulate wall collision
-	game->activePiece.color = C_RED;
-	game->activePiece.orientation = O_EAST;
-	game->activePiece.position.x = -2;
-	game->activePiece.position.y = 12;
-	test_function(print_int, rotateRight, 0, game);
-
-	rc_check(lock(game), "lock");
-	test_function(print_int, rotateRight, -1, game);
-
-	rc_check(nextPiece(game), "nextPiece");
-	rc_check(moveDown(game, -2), "moveDown");
-	test_function(print_int, rotateRight, 0, game);
+	test_function(print_int, rotate, 0, game, -1);
 
 error:	// fallthrough
 	destroyGame(game);

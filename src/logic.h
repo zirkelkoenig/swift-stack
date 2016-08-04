@@ -26,11 +26,9 @@ int moveHorizontal(State* state, int x);
 returns 1 once the piece becomes blocked. Returns 0 on success and -1 on error. */
 int moveDown(State* state, int y);
 
-/* Rotates the piece by 90 degrees if possible. Returns 0 on success and a negative integer on error. */
-int rotateLeft(State* state);
-
-/* Rotates the piece by -90 degrees if possible. Returns 0 on success and a negative integer on error. */
-int rotateRight(State* state);
+/* Rotates the piece by 90 degrees clockwise, if direction is positive, and counter-clockwise, if direction is negative.
+0 results in no rotation. Returns 0 on success and a negative integer on error. */
+int rotate(State* state, int direction);
 
 /* Destroys the playfield and frees all resources. */
 void destroyGame(State* state);

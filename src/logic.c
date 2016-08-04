@@ -228,30 +228,18 @@ error:
 	return -1;
 }
 
-int rotateRight(State* state)
+int rotate(State* state, int direction)
 {
 	cond_check(state, "argument \"state\" uninitialized");
 	cond_check(state->activePiece.color != C_EMPTY, "argument \"state\" has no active piece");
 
-	int newOrientation = (state->activePiece.orientation + 1) % O_NONE;
-	int coll = checkCollision(state, state->activePiece.position, newOrientation);
-	rc_check(coll, "checkCollision");
-	if(!coll) {
-		state->activePiece.orientation = newOrientation;
+	if(direction == 0) {
+		return 0;
 	}
-	return 0;
-
-error:
-	return -1;
-}
-
-int rotateLeft(State* state)
-{
-	cond_check(state, "argument \"state\" uninitialized");
-	cond_check(state->activePiece.color != C_EMPTY, "argument \"state\" has no active piece");
-
-	int newOrientation = state->activePiece.orientation - 1;
-	if(newOrientation < 0) {
+	int newOrientation = state->activePiece.orientation;
+	newOrientation += direction > 0 ? 1 : -1;
+	newOrientation %= O_NONE;
+	while(newOrientation < O_NORTH) {
 		newOrientation += O_NONE;
 	}
 

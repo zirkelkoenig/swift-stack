@@ -111,11 +111,11 @@ int main(int argc, char *argv[])
 				switch(event->key.keysym.scancode) {
 				case SDL_SCANCODE_J:
 				case SDL_SCANCODE_L:
-					rc_check(rotateLeft(game), "rotateLeft");
+					rc_check(rotate(game, -1), "rotate");
 					break;
 
 				case SDL_SCANCODE_K:
-					rc_check(rotateRight(game), "rotateRight");
+					rc_check(rotate(game, 1), "rotate");
 					break;
 
 				case SDL_SCANCODE_F:
