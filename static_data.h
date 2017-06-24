@@ -32,7 +32,7 @@ enum Phase {
 };
 
 /*
-A piece with it's color, orientation and block positions on the field, which are ordered "column (line)", starting from
+A piece with it's color, orientation and block positions on the field, which are ordered "line X column", starting from
 the lower left.
 */
 typedef struct Piece {
@@ -55,7 +55,7 @@ typedef struct Input_Map {
 
 /*
 The state of a game including the current phase with a frame counter, the piece (Color) history, the currently active
-piece and the field, wich is ordered "lines => columns" starting from the lower left with 3 extra lines on top, which
+piece and the field, wich is ordered "line X column" starting from the lower left with 3 extra lines on top, which
 shouldn't be drawn.
 */
 typedef struct State {
