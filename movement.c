@@ -292,3 +292,30 @@ int spawn(State *state)
 	state->cur_piece = init_pieces[next_color];
 	return !check_collision(state);
 }
+
+int init(State *state)
+{
+	srand(time(NULL));
+
+	int first_color = rand() % 4;
+	if (first_color == 3) {
+		first_color = TURQUOISE;
+	}
+
+	state->history[0] = GREEN;
+	state->history[1] = PINK;
+	state->history[2] = GREEN;
+	state->history[3] = PINK;
+
+	state->cur_piece = init_pieces[first_color];
+
+	int i = 0;
+	int j = 0;
+	for (i = 0; i != 23; i++) {
+		for (j = 0; j != 10; j++) {
+			state->field[j][i] = EMPTY;
+		}
+	}
+
+	return 0;
+}
