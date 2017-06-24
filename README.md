@@ -1,5 +1,4 @@
 # Play Instructions
-## Key Mapping
 
 * S - Move left
 * F - Move right
@@ -9,9 +8,6 @@
 * J - Rotate counter-clockwise
 * K - Rotate clockwise
 * L - Rotate counter-clockwise
-
-## Details
-As soon as the piece hits the ground (or the stack), you have a small window of time to further move and rotate it before it locks. You lose when a new piece can not be placed.
 
 # Game Details
 ## Phases
@@ -23,7 +19,8 @@ As soon as the piece hits the ground (or the stack), you have a small window of 
 		1. Spawn new piece
 		2. Perform initial rotation
 		3. Check for block out
-* DROPPING: Main phase, player can input all commands, piece is pulled by current gravity.
+
+* DROPPING: Main phase, player can input all commands, piece is pulled down by gravity.
 	1. Process rotation inputs
 	2. Process (fast) shift inputs
 	3. Apply gravity (check for phase change)
@@ -32,13 +29,13 @@ As soon as the piece hits the ground (or the stack), you have a small window of 
 * LOCKING: Delay before a piece locks, can be reset by a successful drop.
 	1. Process rotation inputs
 	2. Process (fast) shift inputs
-	3. Apply gravity (lock piece or reset phase counter)
-	4. Process soft drop input (lock piece or reset phase counter)
+	3. Apply maximum gravity (check for drop -> lock delay reset)
+	4. Process soft drop input (lock piece)
 	5. Increase phase counter (check for phase change)
 
 * CLEARING: Line clear delay, player must wait
 	1. Increase phase counter
-	2. Check for phase change
+	2. Check for phase change (increase level by lines destroyed);
 
 # Code Remarks
 ## Coding Style
