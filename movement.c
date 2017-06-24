@@ -170,3 +170,31 @@ fail: // fallthrough
 	piece->orientation = old_orientation;
 	return 0;
 }
+
+int drop(State *state, int speed)
+{
+	Piece *piece = &state->cur_piece;
+	int lines_dropped = 0;
+	int i = 0;
+
+	while (!check_collision(state) && lines_dropped != speed) {
+		for (i = 0; i != 4; i++) {
+			piece->y_pos[i]--;
+		}
+		lines_dropped++;
+	}
+
+	if (lines_dropped == speed) {
+		return 2;
+	}
+
+	for (i = 0; i != 4; i++) {
+		piece->y_pos[i]++;
+	}
+
+	if (lines_dropped == 0) {
+		return 0;
+	} else {
+		return 1;
+	}
+}

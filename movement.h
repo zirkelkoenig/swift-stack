@@ -18,4 +18,13 @@ if necessary/possible. Return codes:
 */
 int rotate(State *state, int direction);
 
+/*
+Move the currently active piece down the field by the number of lines specified by speed. Stops when encountering a
+collision. Return codes:
+	2 - success
+	1 - success with collision
+	0 - fail with collision
+*/
+int drop(State *state, int speed);
+
 #endif
