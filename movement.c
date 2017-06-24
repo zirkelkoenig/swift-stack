@@ -201,9 +201,62 @@ int drop(State *state, int speed)
 
 void lock(State *state)
 {
-	Piece *piece = &state->piece;
+	Piece *piece = &state->cur_piece;
 	int i = 0;
 	for (i = 0; i != 4; i++) {
 		state->field[piece->x_pos[i]][piece->y_pos[i]] = piece->color;
 	}
+}
+
+int clear(State *state)
+{
+	int count = 0;
+	int i = 0;
+	int j = 0;
+
+	for (i = 0; i != 23; i++) {
+		int clear = 1;
+		for (j = 0; j != 10; j++) {
+			if (state->field[j][i] == EMPTY) {
+				clear = 0;
+				break;
+			}
+		}
+
+		if (clear) {
+			count++;
+			for (j = 0; j != 10; j++) {
+				state->field[j][i] = DESTROYED;
+			}
+		}
+	}
+	return count;
+}
+
+int destroy(State *state)
+{
+	int count = 0;
+	int i = 0;
+
+	for (i = 0; i != 23; i++) {
+		if (state->field[0][i] == DESTROYED) {
+			int j = 0;
+			int k = 0;
+
+			for (k = i; k != 22; k++) {
+				for (j = 0; j != 10; j++) {
+					state->field[j][k] = state->field[j][k + 1];
+				}
+			}
+
+			for (j = 0; j != 10; j++) {
+				state->field[j][22] = EMPTY;
+			}
+
+			count++;
+			i--;
+		}
+	}
+
+	return count;
 }

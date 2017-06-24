@@ -30,4 +30,12 @@ int drop(State *state, int speed);
 /* Marks the currently active piece's position on the field. The piece is invalid after. */
 void lock(State *state);
 
+/* Scans the field for complete lines and marks them for clearing. Returns the number of marked lines. */
+int clear(State *state);
+
+/*
+Removes all lines marked by clear() from the field and consolidates the stack. Returns the number of destroyed lines.
+*/
+int destroy(State *state);
+
 #endif
