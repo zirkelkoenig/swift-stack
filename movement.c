@@ -198,3 +198,12 @@ int drop(State *state, int speed)
 		return 1;
 	}
 }
+
+void lock(State *state)
+{
+	Piece *piece = &state->piece;
+	int i = 0;
+	for (i = 0; i != 4; i++) {
+		state->field[piece->x_pos[i]][piece->y_pos[i]] = piece->color;
+	}
+}
