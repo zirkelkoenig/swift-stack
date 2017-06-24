@@ -38,4 +38,10 @@ Removes all lines marked by clear() from the field and consolidates the stack. R
 */
 int destroy(State *state);
 
+/* Takes the next piece in the spawn history, places it at the initial position and updates the history. Return codes:
+	1 - success
+	0 - fail (collision)
+*/
+int spawn(State *state);
+
 #endif

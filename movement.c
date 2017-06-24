@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "movement.h"
 #include "static_data.h"
 
@@ -259,4 +260,36 @@ int destroy(State *state)
 	}
 
 	return count;
+}
+
+int spawn(State *state)
+{
+	int tries = 0;
+	int next_color = 0;
+	int ok = 0;
+	int i = 0;
+
+	while (tries != 6 && !ok) {
+		next_color = rand() % 7;
+		ok = 1;
+
+		for (i = 0; i != 4; i++) {
+			if (state->history[i] == next_color) {
+				ok = 0;
+				break;
+			}
+		}
+
+		tries++;
+	}
+
+	int piece_color = state->history[0];
+	for (i = 0; i != 3; i++) {
+		state->history[i] = state->history[i + 1];
+	}
+	state->history[3] = next_color;
+
+	state->cur_piece = init_pieces[piece_color];
+	int collision = check_collision(state);
+	return !collision;
 }
