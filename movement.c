@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <time.h>
 #include "movement.h"
 #include "static_data.h"
 
@@ -264,12 +265,12 @@ int destroy(State *state)
 
 int spawn(State *state)
 {
+	int next_color = -1;
 	int tries = 0;
-	int next_color = 0;
 	int ok = 0;
 	int i = 0;
 
-	while (tries != 6 && !ok) {
+	while (!ok && tries != 6) {
 		next_color = rand() % 7;
 		ok = 1;
 
@@ -283,13 +284,11 @@ int spawn(State *state)
 		tries++;
 	}
 
-	int piece_color = state->history[0];
 	for (i = 0; i != 3; i++) {
 		state->history[i] = state->history[i + 1];
 	}
 	state->history[3] = next_color;
 
-	state->cur_piece = init_pieces[piece_color];
-	int collision = check_collision(state);
-	return !collision;
+	state->cur_piece = init_pieces[next_color];
+	return !check_collision(state);
 }
