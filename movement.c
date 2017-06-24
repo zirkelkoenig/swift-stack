@@ -226,7 +226,7 @@ int drop(State *state, int speed)
 		check(rc >= 0, "\"check_collision\" returned an error");
 	}
 
-	if (lines_dropped == speed) {
+	if (!rc && lines_dropped == speed) {
 		return 2;
 	}
 
@@ -366,7 +366,7 @@ error:
 	return -2;
 }
 
-int init(State *state)
+int init_field(State *state)
 {
 	check(state, "argument \"state\" uninitialized");
 

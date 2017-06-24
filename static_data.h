@@ -53,16 +53,29 @@ typedef struct Input_Map {
 	int rot_right;
 } Input_Map;
 
+/* Several game flow controlling values. */
+typedef struct Timing {
+	int gravity;
+	int load;
+	int load_clear;
+	int shift;
+	int lock;
+	int clear;
+} Timing;
+
 /*
 The state of a game including the current phase with a frame counter, the piece (Color) history, the currently active
 piece and the field, wich is ordered "line X column" starting from the lower left with 3 extra lines on top, which
 shouldn't be drawn.
 */
 typedef struct State {
+	int level;
 	int phase;
 	int phase_counter;
+	int shift_counter;
 	int history[4];
 	int field[10][23];
+	Timing timing;
 	Piece cur_piece;
 } State;
 

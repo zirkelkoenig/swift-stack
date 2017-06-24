@@ -47,6 +47,6 @@ int spawn(State *state);
 /*
 Initializes the field, piece and randomizer of the given state.
 */
-int init(State *state);
+int init_field(State *state);
 
 #endif
