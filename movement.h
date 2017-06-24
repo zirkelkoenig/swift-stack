@@ -27,8 +27,8 @@ collision. Return codes:
 */
 int drop(State *state, int speed);
 
-/* Marks the currently active piece's position on the field. The piece is invalid after. */
-void lock(State *state);
+/* Marks the currently active piece's position on the field. The piece is invalid after. Return is for error codes. */
+int lock(State *state);
 
 /* Scans the field for complete lines and marks them for clearing. Returns the number of marked lines. */
 int clear(State *state);

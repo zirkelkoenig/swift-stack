@@ -2,10 +2,13 @@
 #include <time.h>
 #include "movement.h"
 #include "static_data.h"
+#include "dbg.h"
 
 /* Checks whether the current field/piece state results in a collision. */
 int check_collision(State *state)
 {
+	check(state, "argument \"state\" uninitialized");
+
 	int i = 0;
 	for (i = 0; i != 4; i++) {
 		int x_check = state->cur_piece.x_pos[i];
@@ -17,10 +20,15 @@ int check_collision(State *state)
 		}
 	}
 	return 0;
+
+error:
+	return -2;
 }
 
 int shift(State *state, int direction)
 {
+	check(state, "argument \"state\" uninitialized");
+
 	if (direction == 0) {
 		return 1;
 	}
@@ -38,7 +46,9 @@ int shift(State *state, int direction)
 		piece->x_pos[i] += (direction > 0) ? 1 : (-1);
 	}
 
-	if (check_collision(state)) {
+	int rc = check_collision(state);
+	check(rc >= 0, "\"check_collision\" returned an error");
+	if (rc) {
 		piece->x_pos[0] = old_x_pos[0];
 		piece->x_pos[1] = old_x_pos[1];
 		piece->x_pos[2] = old_x_pos[2];
@@ -47,10 +57,18 @@ int shift(State *state, int direction)
 	} else {
 		return 1;
 	}
+
+error:
+	if (rc < 0) {
+		return rc;
+	}
+	return -2;
 }
 
 int rotate(State *state, int direction)
 {
+	check(state, "argument \"state\" uninitialized");
+
 	if (direction == 0) {
 		return 1;
 	}
@@ -103,7 +121,9 @@ int rotate(State *state, int direction)
 		}
 	}
 
-	if (!check_collision(state)) {
+	int rc = check_collision(state);
+	check(rc >= 0, "\"check_collision\" returned an error");
+	if (!rc) {
 		return 1;
 	}
 
@@ -153,10 +173,15 @@ int rotate(State *state, int direction)
 	}
 
 	// try wall kicks
-	if (shift(state, 1) == 1) {
+	rc = shift(state, 1);
+	check(rc >= 0, "\"shift\" returned an error");
+	if (rc == 1) {
 		return 1;
 	}
-	if (shift(state, -1) == 1) {
+
+	rc = shift(state, -1);
+	check(rc >= 0, "\"shift\" returned an error");
+	if (rc == 1) {
 		return 1;
 	}
 
@@ -171,19 +196,34 @@ fail: // fallthrough
 	piece->y_pos[3] = old_y_pos[3];
 	piece->orientation = old_orientation;
 	return 0;
+
+error:
+	if (rc < 0) {
+		return rc;
+	}
+	return -2;
 }
 
 int drop(State *state, int speed)
 {
+	check(state, "argument \"state\" uninitialized");
+	check(speed >= 0, "argument \"speed\" is less than 0");
+
 	Piece *piece = &state->cur_piece;
 	int lines_dropped = 0;
 	int i = 0;
 
-	while (!check_collision(state) && lines_dropped != speed) {
+	int rc = check_collision(state);
+	check(rc >= 0, "\"check_collision\" returned an error");
+
+	while (!rc && lines_dropped != speed) {
 		for (i = 0; i != 4; i++) {
 			piece->y_pos[i]--;
 		}
 		lines_dropped++;
+
+		rc = check_collision(state);
+		check(rc >= 0, "\"check_collision\" returned an error");
 	}
 
 	if (lines_dropped == speed) {
@@ -199,19 +239,33 @@ int drop(State *state, int speed)
 	} else {
 		return 1;
 	}
+
+error:
+	if (rc < 0) {
+		return rc;
+	}
+	return -2;
 }
 
-void lock(State *state)
+int lock(State *state)
 {
+	check(state, "argument \"state\" uninitialized");
+
 	Piece *piece = &state->cur_piece;
 	int i = 0;
 	for (i = 0; i != 4; i++) {
 		state->field[piece->x_pos[i]][piece->y_pos[i]] = piece->color;
 	}
+	return 0;
+
+error:
+	return -2;
 }
 
 int clear(State *state)
 {
+	check(state, "argument \"state\" uninitialized");
+
 	int count = 0;
 	int i = 0;
 	int j = 0;
@@ -233,10 +287,15 @@ int clear(State *state)
 		}
 	}
 	return count;
+
+error:
+	return -2;
 }
 
 int destroy(State *state)
 {
+	check(state, "argument \"state\" uninitialized");
+
 	int count = 0;
 	int i = 0;
 
@@ -261,10 +320,15 @@ int destroy(State *state)
 	}
 
 	return count;
+
+error:
+	return -2;
 }
 
 int spawn(State *state)
 {
+	check(state, "argument \"state\" uninitialized");
+
 	int next_color = -1;
 	int tries = 0;
 	int ok = 0;
@@ -290,11 +354,22 @@ int spawn(State *state)
 	state->history[3] = next_color;
 
 	state->cur_piece = init_pieces[next_color];
-	return !check_collision(state);
+
+	int rc = check_collision(state);
+	check(rc >= 0, "\"check_collision\" returned an error");
+	return !rc;
+
+error:
+	if (rc < 0) {
+		return rc;
+	}
+	return -2;
 }
 
 int init(State *state)
 {
+	check(state, "argument \"state\" uninitialized");
+
 	srand(time(NULL));
 
 	int first_color = rand() % 4;
@@ -318,4 +393,7 @@ int init(State *state)
 	}
 
 	return 0;
+
+error:
+	return -2;
 }

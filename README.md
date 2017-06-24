@@ -16,3 +16,9 @@ As soon as the piece hits the ground (or the stack), you have a small window of 
 # Code Remarks
 ## Coding Style
 Indent with tabs (8 spaces wide), maximum line width is 120 characters. Indent style is K&R.
+
+## Return codes
+All functions with return codes should follow this guideline:
+
+* -1 - Internal error, like a failed call to an external function
+* -2 - Malformed arguments
