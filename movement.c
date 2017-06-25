@@ -359,7 +359,12 @@ int spawn(State *state)
 	}
 	state->history[3] = next_color;
 
-	state->cur_piece = init_pieces[next_color];
+	state->cur_piece = state->next_piece;
+	state->next_piece = init_pieces[next_color];
+	for (i = 0; i != 4; i++) {
+		state->next_piece.y_pos[i] += 3;
+		state->cur_piece.y_pos[i] -= 3;
+	}
 
 	int rc = check_collision(state);
 	//log_info("spawn collision = %d", rc);
@@ -389,9 +394,12 @@ int init_field(State *state)
 	state->history[2] = GREEN;
 	state->history[3] = PINK;
 
-	state->cur_piece = init_pieces[first_color];
-
+	state->next_piece = init_pieces[first_color];
 	int i = 0;
+	for (i = 0; i != 4; i++) {
+		state->next_piece.y_pos[i] += 3;
+	}
+
 	int j = 0;
 	for (i = 0; i != 23; i++) {
 		for (j = 0; j != 10; j++) {

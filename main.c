@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 		const uint8_t *keyboard = SDL_GetKeyboardState(NULL);
 		input->left = keyboard[SDL_SCANCODE_S];
 		input->right = keyboard[SDL_SCANCODE_F];
-		input->up = keyboard[SDL_SCANCODE_E];
+		input->up = keyboard[SDL_SCANCODE_SPACE];
 		input->down = keyboard[SDL_SCANCODE_D];
 		input->rot_left_a = keyboard[SDL_SCANCODE_J];
 		input->rot_left_b = keyboard[SDL_SCANCODE_L];
@@ -125,6 +125,23 @@ int main(int argc, char *argv[])
 			sdl_rc = SDL_RenderFillRect(renderer, &block);
 			check_sdl(sdl_rc == 0);
 		}
+
+		Piece *preview = &game->next_piece;
+		sdl_rc = SDL_SetRenderDrawColor(renderer,
+				display_colors[DROPPING][preview->color][0],
+				display_colors[DROPPING][preview->color][1],
+				display_colors[DROPPING][preview->color][2],
+				display_colors[DROPPING][preview->color][3]);
+		check_sdl(sdl_rc == 0);
+		SDL_Rect blocks[4];
+		for (i = 0; i != 4; i++) {
+			blocks[i].x = preview->x_pos[i] * PPS;
+			blocks[i].y = (23 - preview->y_pos[i]) * PPS;
+			blocks[i].w = PPS;
+			blocks[i].h = -PPS;
+		}
+		sdl_rc = SDL_RenderFillRects(renderer, blocks, 4);
+		check_sdl(sdl_rc == 0);
 
 		SDL_RenderPresent(renderer);
 		//print_field(game);

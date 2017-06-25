@@ -3,11 +3,12 @@
 * S - Move left
 * F - Move right
 * D - Soft drop
-* E - Sonic drop
 
 * J - Rotate counter-clockwise
 * K - Rotate clockwise
 * L - Rotate counter-clockwise
+
+* Space - Sonic drop
 
 # Game Details
 ## Pieces

@@ -78,6 +78,7 @@ typedef struct State {
 	int field[10][23];
 	Timing timing;
 	Piece cur_piece;
+	Piece next_piece;
 } State;
 
 /*
