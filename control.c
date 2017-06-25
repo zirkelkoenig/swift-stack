@@ -4,6 +4,9 @@
 #include "dbg.h"
 
 int last_direction = 0;
+int last_rot_left_a = 0;
+int last_rot_left_b = 0;
+int last_rot_right = 0;
 
 State *init_state()
 {
@@ -48,40 +51,6 @@ void destroy_state(State *state)
 
 error:
 	;// do nothing
-}
-
-/*
-Return codes:
-	2 - at least one rotation succeeded
-	1 - no rotation performed
-	0 - all rotations failed
-*/
-int process_rotations(State *state, Input_Map *input)
-{
-	check(state, "argument \"state\" uninitialized");
-	check(input, "argument \"input\" uninitialized");
-
-	int rc = 0;
-	if (input->rot_left_a) {
-		rc = rotate(state, -1);
-		check(rc >= 0, "\"rotate\" returned an error");
-	}
-	if (input->rot_left_b) {
-		rc = rotate(state, -1);
-		check(rc >= 0, "\"rotate\" returned an error");
-	}
-	if (input->rot_right) {
-		rc = rotate(state, 1);
-		check(rc >= 0, "\"rotate\" returned an error");
-	}
-
-	return rc;
-
-error:
-	if (rc < 0) {
-		return rc;
-	}
-	return -2;
 }
 
 int process_shift(State *state, Input_Map *input, int direction)
@@ -172,6 +141,14 @@ int process(State *state, Input_Map *input)
 
 	switch (state->phase) {
 	case LOADING:
+		if (state->phase_counter == 0) {
+			Timing *new_timing = get_timings(state->level);
+			if (new_timing) {
+				state->timing = *new_timing;
+				free(new_timing);
+			}
+		}
+
 		if (cur_direction) {
 			if (cur_direction == last_direction) {
 				state->shift_counter++;
@@ -182,22 +159,29 @@ int process(State *state, Input_Map *input)
 			state->shift_counter = 0;
 		}
 
-		Timing *new_timing = get_timings(state->level);
-		if (new_timing) {
-			state->timing = *new_timing;
-			free(new_timing);
-		}
-
 		state->phase_counter++;
 		if (state->phase_counter == state->timing.load) {
 			rc = spawn(state);
 			check(rc >= 0, "\"spawn\" returned an error");
 
-			int rot_rc = process_rotations(state, input);
-			check(rot_rc >= 0, "\"process_rotations\" returned an error");
+			int rot_rc[3];
+			if (input->rot_left_a) {
+				rot_rc[0] = rotate(state, -1);
+				check(rot_rc[0] >= 0, "\"rotate\" returned an error");
+			}
+			if (input->rot_left_b) {
+				rot_rc[1] = rotate(state, -1);
+				check(rot_rc[1] >= 0, "\"rotate\" returned an error");
+			}
+			if (input->rot_right) {
+				rot_rc[2] = rotate(state, -1);
+				check(rot_rc[2] >= 0, "\"rotate\" returned an error");
+			}
 
-			if (rc == 0 && rot_rc != 2) {
-				return 0;
+			if (rc == 0) {
+				if (rot_rc[0] == 0 && rot_rc[1] == 0 && rot_rc[2] == 0) {
+					return 0;
+				}
 			}
 
 			state->phase = DROPPING;
@@ -209,8 +193,18 @@ int process(State *state, Input_Map *input)
 		break;
 
 	case DROPPING:
-		rc = process_rotations(state, input);
-		check(rc >= 0, "\"process_rotations\" returned an error");
+		if (input->rot_left_a && !last_rot_left_a) {
+			rc = rotate(state, -1);
+			check(rc >= 0, "\"rotate\" returned an error");
+		}
+		if (input->rot_left_b && !last_rot_left_b) {
+			rc = rotate(state, -1);
+			check(rc >= 0, "\"rotate\" returned an error");
+		}
+		if (input->rot_right && !last_rot_right) {
+			rc = rotate(state, 1);
+			check(rc >= 0, "\"rotate\" returned an error");
+		}
 
 		rc = process_shift(state, input, cur_direction);
 		check(rc >= 0, "\"process_shift\" returned an error");
@@ -251,9 +245,18 @@ int process(State *state, Input_Map *input)
 		break;
 
 	case LOCKING:
-		//log_info("lock_delay = %d", state->phase_counter);
-		rc = process_rotations(state, input);
-		check(rc >= 0, "\"process_rotations\" returned an error");
+		if (input->rot_left_a && !last_rot_left_a) {
+			rc = rotate(state, -1);
+			check(rc >= 0, "\"rotate\" returned an error");
+		}
+		if (input->rot_left_b && !last_rot_left_b) {
+			rc = rotate(state, -1);
+			check(rc >= 0, "\"rotate\" returned an error");
+		}
+		if (input->rot_right && !last_rot_right) {
+			rc = rotate(state, 1);
+			check(rc >= 0, "\"rotate\" returned an error");
+		}
 
 		rc = process_shift(state, input, cur_direction);
 		check(rc >= 0, "\"process_shift\" returned an error");
@@ -292,6 +295,9 @@ int process(State *state, Input_Map *input)
 	}
 
 	last_direction = cur_direction;
+	last_rot_left_a = input->rot_left_a;
+	last_rot_left_b = input->rot_left_b;
+	last_rot_right = input->rot_right;
 	return 1;
 
 error:
