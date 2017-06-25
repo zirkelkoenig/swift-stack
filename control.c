@@ -99,6 +99,11 @@ int process_lock(State *state)
 
 	if ((state->level % 100) != 99 && state->level != 998) {
 		state->level++;
+		Timing *new_timing = get_timings(state->level);
+		if (new_timing) {
+			state->timing = *new_timing;
+			free(new_timing);
+		}
 	}
 
 	rc = clear(state);
@@ -141,14 +146,6 @@ int process(State *state, Input_Map *input)
 
 	switch (state->phase) {
 	case LOADING:
-		if (state->phase_counter == 0) {
-			Timing *new_timing = get_timings(state->level);
-			if (new_timing) {
-				state->timing = *new_timing;
-				free(new_timing);
-			}
-		}
-
 		if (cur_direction) {
 			if (cur_direction == last_direction) {
 				state->shift_counter++;
@@ -282,7 +279,16 @@ int process(State *state, Input_Map *input)
 		if (state->phase_counter == state->timing.clear) {
 			rc = destroy(state);
 			check(rc >= 0, "\"destroy\" returned an error");
-			state->level += rc;
+
+			int i = 0;
+			for (i = 0; i != rc; i++) {
+				state->level++;
+				Timing *new_timing = get_timings(state->level);
+				if (new_timing) {
+					state->timing = *new_timing;
+					free(new_timing);
+				}
+			}
 			if (state->level >= 999) {
 				state->level = 999;
 				return 2;
