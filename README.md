@@ -10,6 +10,17 @@
 * L - Rotate counter-clockwise
 
 # Game Details
+## Pieces
+Internally, all pieces are identified by their color.
+
+* I - Red
+* T - Turquoise
+* L - Orange
+* J - Blue
+* S - Pink
+* Z - Green
+* O - Yellow
+
 ## Phases
 
 * LOADING: Delay before a new piece is spawned.
