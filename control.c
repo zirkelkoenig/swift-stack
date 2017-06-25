@@ -18,13 +18,13 @@ State *init_state()
 	int rc = init_field(state);
 	check(rc >= 0, "\"init_field\" returned an error");
 
-	// temporary fixed values
-	state->timing.gravity = 4;
-	state->timing.load = 25;
-	state->timing.load_clear = 25;
-	state->timing.shift = 14;
-	state->timing.lock = 30;
-	state->timing.clear = 40;
+	Timing *new_timing = get_timings(0);
+	if (new_timing) {
+		state->timing = *new_timing;
+		free(new_timing);
+	} else {
+		sentinel("\"get_timings\" returned an error");
+	}
 
 	last_direction = 0;
 	return state;
@@ -32,6 +32,9 @@ State *init_state()
 error:
 	if (state) {
 		free(state);
+	}
+	if (new_timing) {
+		free(new_timing);
 	}
 	return NULL;
 }
@@ -169,6 +172,12 @@ int process(State *state, Input_Map *input)
 			}
 		} else {
 			state->shift_counter = 0;
+		}
+
+		Timing *new_timing = get_timings(state->level);
+		if (new_timing) {
+			state->timing = *new_timing;
+			free(new_timing);
 		}
 
 		state->phase_counter++;

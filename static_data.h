@@ -90,4 +90,7 @@ extern const int y_rotations[7][4][4];
 /* All piece prototypes in their initial positions. Ordered by: Color */
 extern const Piece init_pieces[7];
 
+/* Returns all the timings for the current level or NULL if nothing changes. */
+Timing *get_timings(int level);
+
 #endif
