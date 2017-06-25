@@ -73,6 +73,7 @@ typedef struct State {
 	int phase;
 	int phase_counter;
 	int shift_counter;
+	int drop_counter;
 	int history[4];
 	int field[10][23];
 	Timing timing;

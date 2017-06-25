@@ -209,35 +209,41 @@ int drop(State *state, int speed)
 	check(state, "argument \"state\" uninitialized");
 	check(speed >= 0, "argument \"speed\" is less than 0");
 
-	Piece *piece = &state->cur_piece;
-	int lines_dropped = 0;
-	int i = 0;
-
-	int rc = check_collision(state);
-	check(rc >= 0, "\"check_collision\" returned an error");
-
-	while (!rc && lines_dropped != speed) {
-		for (i = 0; i != 4; i++) {
-			piece->y_pos[i]--;
-		}
-		lines_dropped++;
-
-		rc = check_collision(state);
-		check(rc >= 0, "\"check_collision\" returned an error");
-	}
-
-	if (!rc && lines_dropped == speed) {
+	//log_info("drop speed = %d", speed);
+	if (speed == 0) {
 		return 2;
 	}
 
-	for (i = 0; i != 4; i++) {
-		piece->y_pos[i]++;
-	}
+	Piece *piece = &state->cur_piece;
+	int lines_dropped = 0;
+	int i = 0;
+	int rc = 0;
 
-	if (lines_dropped == 0) {
-		return 0;
+	do {
+		for (i = 0; i != 4; i++) {
+			piece->y_pos[i]--;
+		}
+		rc = check_collision(state);
+		check(rc >= 0, "\"check_collsision\" returned an error");
+
+		if (rc) {
+			for (i = 0; i != 4; i++) {
+				piece->y_pos[i]++;
+			}
+			break;
+		} else {
+			lines_dropped++;
+		}
+	} while (lines_dropped != speed);
+
+	if (rc) {
+		if (lines_dropped == 0) {
+			return 0;
+		} else {
+			return 1;
+		}
 	} else {
-		return 1;
+		return 2;
 	}
 
 error:
@@ -356,6 +362,7 @@ int spawn(State *state)
 	state->cur_piece = init_pieces[next_color];
 
 	int rc = check_collision(state);
+	//log_info("spawn collision = %d", rc);
 	check(rc >= 0, "\"check_collision\" returned an error");
 	return !rc;
 

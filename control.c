@@ -14,6 +14,7 @@ State *init_state()
 	state->phase = LOADING;
 	state->phase_counter = 0;
 	state->shift_counter = 0;
+	state->drop_counter = 0;
 
 	int rc = init_field(state);
 	check(rc >= 0, "\"init_field\" returned an error");
@@ -49,6 +50,12 @@ error:
 	;// do nothing
 }
 
+/*
+Return codes:
+	2 - at least one rotation succeeded
+	1 - no rotation performed
+	0 - all rotations failed
+*/
 int process_rotations(State *state, Input_Map *input)
 {
 	check(state, "argument \"state\" uninitialized");
@@ -130,6 +137,7 @@ int process_lock(State *state)
 
 	state->phase = (rc > 0) ? CLEARING : LOADING;
 	state->phase_counter = 0;
+	log_info("phase = %s", (rc > 0) ? "CLEARING" : "LOADING");
 
 	return rc;
 
@@ -185,14 +193,18 @@ int process(State *state, Input_Map *input)
 			rc = spawn(state);
 			check(rc >= 0, "\"spawn\" returned an error");
 
-			rc = process_rotations(state, input);
-			check(rc >= 0, "\"process_rotations\" returned an error");
-			if (rc == 0) {
+			int rot_rc = process_rotations(state, input);
+			check(rot_rc >= 0, "\"process_rotations\" returned an error");
+
+			if (rc == 0 && rot_rc != 2) {
 				return 0;
 			}
 
 			state->phase = DROPPING;
 			state->phase_counter = 0;
+			state->drop_counter = 0;
+			log_info("level = %d", state->level);
+			log_info("phase = DROPPING");
 		}
 		break;
 
@@ -203,12 +215,18 @@ int process(State *state, Input_Map *input)
 		rc = process_shift(state, input, cur_direction);
 		check(rc >= 0, "\"process_shift\" returned an error");
 
-		double pull = 1 / (state->timing.gravity / 256);
-		rc = drop(state, state->phase_counter / pull);
+		double pull = 1.0 / (state->timing.gravity / 256.0);
+		int down = state->phase_counter / pull - state->drop_counter;
+		//log_info("pull = %f", pull);
+		//log_info("down = %d", down);
+		rc = drop(state, down);
+		//log_info("drop = %d", rc);
 		check(rc >= 0, "\"drop\" returned an error");
+		state->drop_counter += down;
 		if (rc < 2) {
 			state->phase = LOCKING;
 			state->phase_counter = 0;
+			log_info("phase = LOCKING");
 			break;
 		}
 
@@ -225,6 +243,7 @@ int process(State *state, Input_Map *input)
 			check(rc >= 0, "\"drop\" returned an error");
 			state->phase = LOCKING;
 			state->phase_counter = 0;
+			log_info("phase = LOCKING");
 			break;
 		}
 
@@ -232,6 +251,7 @@ int process(State *state, Input_Map *input)
 		break;
 
 	case LOCKING:
+		//log_info("lock_delay = %d", state->phase_counter);
 		rc = process_rotations(state, input);
 		check(rc >= 0, "\"process_rotations\" returned an error");
 
@@ -239,6 +259,7 @@ int process(State *state, Input_Map *input)
 		check(rc >= 0, "\"process_shift\" returned an error");
 
 		rc = drop(state, 20);
+		//log_info("drop = %d", rc);
 		check(rc >= 0, "\"drop\" returned an error");
 		if (rc > 0) {
 			state->phase_counter = 0;
@@ -265,6 +286,7 @@ int process(State *state, Input_Map *input)
 
 			state->phase = LOADING;
 			state->phase_counter = 0;
+			log_info("phase = LOADING");
 		}
 		break;
 	}
