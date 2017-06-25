@@ -118,7 +118,7 @@ int process_lock(State *state)
 	int rc = lock(state);
 	check(rc >= 0, "\"lock\" returned an error");
 
-	if (state->level % 100 != 99) {
+	if ((state->level % 100) != 99 && state->level != 998) {
 		state->level++;
 	}
 
@@ -249,6 +249,10 @@ int process(State *state, Input_Map *input)
 			rc = destroy(state);
 			check(rc >= 0, "\"destroy\" returned an error");
 			state->level += rc;
+			if (state->level >= 999) {
+				state->level = 999;
+				return 2;
+			}
 
 			state->phase = LOADING;
 			state->phase_counter = 0;
