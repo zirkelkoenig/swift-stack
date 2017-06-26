@@ -161,7 +161,7 @@ int process(State *state, Input_Map *input)
 			rc = spawn(state);
 			check(rc >= 0, "\"spawn\" returned an error");
 
-			int rot_rc[3];
+			int rot_rc[] = { 0, 0, 0 };
 			if (input->rot_left_a) {
 				rot_rc[0] = rotate(state, -1);
 				check(rot_rc[0] >= 0, "\"rotate\" returned an error");
