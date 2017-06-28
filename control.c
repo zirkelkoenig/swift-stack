@@ -65,10 +65,6 @@ int process_shift(State *state, Input_Map *input, int direction)
 			if (state->shift_counter >= state->timing.shift) {
 				rc = shift(state, direction);
 				check(rc >= 0, "\"shift\" returned an error");
-				rc = shift(state, direction);
-				check(rc >= 0, "\"shift\" returned an error");
-				rc = shift(state, direction);
-				check(rc >= 0, "\"shift\" returned an error");
 			} else {
 				state->shift_counter++;
 			}
