@@ -180,7 +180,7 @@ int process(State *state, Input_Map *input)
 			state->phase = DROPPING;
 			state->phase_counter = 0;
 			state->drop_counter = 0;
-			log_info("level = %d", state->level);
+			//log_info("level = %d", state->level);
 			//log_info("gravity = %d", state->timing.gravity);
 			//log_info("phase = DROPPING");
 		}
