@@ -19,3 +19,12 @@ set(SOURCE_FILES
 add_executable(tetris ${SOURCE_FILES})
 target_link_libraries(tetris ${SDL2_LIBRARY})
 target_link_libraries(tetris ${SDL2TTF_LIBRARY})
+
+if(WIN32)
+	set_target_properties(tetris PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+	set_target_properties(tetris PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
+	set_target_properties(tetris PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
+	set_target_properties(tetris PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "_CONSOLE")
+	set_target_properties(tetris PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+	set_target_properties(tetris PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
+endif(WIN32)
