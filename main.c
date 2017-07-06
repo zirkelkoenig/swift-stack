@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	check_sdl(renderer);
 
-	const char *font_path = "/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf";
+	const char *font_path = "font/NotoMono-hinted/NotoMono-Regular.ttf";
 	TTF_Font *font = TTF_OpenFont(font_path, 28);
 	check_ttf(font);
 	TTF_SetFontStyle(font, TTF_STYLE_BOLD);
