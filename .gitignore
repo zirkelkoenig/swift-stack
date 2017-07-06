@@ -1,4 +1,5 @@
 main
+tetris
 *.o
 *.swp
 test

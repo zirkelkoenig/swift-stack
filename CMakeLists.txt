@@ -6,6 +6,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(SDL2 2.0 REQUIRED)
 find_package(SDL2TTF 2.0 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
+include_directories(${SDL2TTF_INCLUDE_DIR})
 
 set(SOURCE_FILES
 	main.c
@@ -17,4 +18,4 @@ set(SOURCE_FILES
 
 add_executable(tetris ${SOURCE_FILES})
 target_link_libraries(tetris ${SDL2_LIBRARY})
-
+target_link_libraries(tetris ${SDL2TTF_LIBRARY})
