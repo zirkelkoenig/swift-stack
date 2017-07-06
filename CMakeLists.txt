@@ -4,6 +4,7 @@ project(tetris)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 2.0 REQUIRED)
+find_package(SDL2TTF 2.0 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 
 set(SOURCE_FILES
