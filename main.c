@@ -8,6 +8,8 @@
 #include "video_data.h"
 #include "dbg.h"
 
+#undef main
+
 #define check_sdl(A) if (!(A)) {\
 	fprintf(stderr, "[SDL] (%s:%s:%d) %s\n", __FILE__, __FUNCTION__, __LINE__, SDL_GetError());\
 	goto error;\
