@@ -35,7 +35,7 @@
 #=======================================================================================================================
 # Copyright 2003-2009 Kitware, Inc.
 
-# Distributed under the OSI-approved BSD License (the "License"); see accompanying file Copyright.txt for details.
+# Distributed under the OSI-approved BSD License (the "License"); see https://cmake.org/licensing for details.
 
 # This software is distributed WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE. See the License for more information.
