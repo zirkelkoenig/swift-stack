@@ -69,6 +69,15 @@ setting `tetris` as the Startup Project in the Solution Explorer. After building
 
 to the game executable's location.
 
+# Background
+I started this project to build a clone of the infamous "Tetris The Grandmaster" series by Arika that would run on a PC
+and be played with the keyboard. As such, there are currently no plans to port the game to gaming consoles or mobile
+devices. The latter seems pretty much impossible to me anyways, because of the game's speed and the precision of the
+controls that it requires.
+
+Currently, the internal timings reflect those of TGM2's Master Mode, sans the time requirements and invisible/fading
+credit roll.
+
 # Code Details
 ## Pieces
 Internally, all pieces are identified by their color.
