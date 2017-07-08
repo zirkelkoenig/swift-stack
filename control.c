@@ -7,6 +7,7 @@ int last_direction = 0;
 int last_rot_left_a = 0;
 int last_rot_left_b = 0;
 int last_rot_right = 0;
+int last_clear = 0;
 
 State *init_state()
 {
@@ -105,7 +106,13 @@ int process_lock(State *state)
 	rc = clear(state);
 	check(rc >= 0, "\"clear\" returned an error");
 
-	state->phase = (rc > 0) ? CLEARING : LOADING;
+	if (rc > 0) {
+		state->phase = CLEARING;
+		last_clear = 1;
+	} else {
+		state->phase = LOADING;
+		last_clear = 0;
+	}
 	state->phase_counter = 0;
 	//log_info("phase = %s", (rc > 0) ? "CLEARING" : "LOADING");
 
@@ -153,7 +160,8 @@ int process(State *state, Input_Map *input)
 		}
 
 		state->phase_counter++;
-		if (state->phase_counter == state->timing.load) {
+		int phase_end = last_clear ? state->timing.load_clear : state->timing.load;
+		if (state->phase_counter == phase_end) {
 			rc = spawn(state);
 			check(rc >= 0, "\"spawn\" returned an error");
 
