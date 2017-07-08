@@ -1,7 +1,28 @@
 # Play Instructions
+The goal of the game is to reach level 999, with each piece placement and each line cleared counting as one level. Each
+100 levels make up a section. To cross a section boundary (for example to go from level 199 to 200), you have to clear
+at least one line (the same applies to going from level 998 to 999).
 
-* S - Move left
-* F - Move right
+You can initiate fast shift by holding down one of the shift keys for a short period of time.
+
+When a piece hits the ground or the top of the stack, you have a short amount of time to further move it before it
+locks. A movement that results in the piece moving down resets that time.
+
+A soft drop moves the piece down with high speed, locking it instantly as soon as it hits the ground or the top of the
+stack.
+
+A sonic drop instantly drops the piece to the ground or the top of the stack without locking it.
+
+During the time between the last piece locking and the next piece spawning, you can buffer rotations by holding down one
+or more rotation keys. The piece then spawns pre-rotated. You can also use this time frame to pre-load the fast shift.
+
+The game is over when you reach level 999 or when a new, possibly pre-rotated piece can not be spawned without
+collisions.
+
+## Controls
+
+* S - Shift left
+* F - Shift right
 * D - Soft drop
 
 * J - Rotate counter-clockwise
@@ -10,7 +31,45 @@
 
 * Space - Sonic drop
 
-# Game Details
+# Build Instructions
+## Pre-Requisites
+
+* SDL library (>= 2.0)
+* SDL_ttf library (>= 2.0)
+* CMake build system (>= 3.5)
+
+## Linux
+Install the SDL and SDL_ttf development libraries and the CMake build system via your package manager, then run `cmake`
+and `make` to build the game.
+
+To run, the directory `fonts` needs to be located in the same directory as the game executable. `make install` is not
+implemented yet.
+
+## Windows (Visual Studio)
+Download and unpack the SDL and SDL_ttf development libraries, then download, install and run CMake. During
+configuration, you'll have to manually set the library path variables as follows:
+
+* `SDL2MAIN_LIBRARY = <SDL2 Path>/lib/<Platform>/SDL2main.lib`
+* `SDL2_INCLUDE_DIR = <SDL2 Path>/include`
+* `SDL2_LIBRARY_TEMP = <SDL2 Path>/lib/<Platform>/SDL2.lib`
+* `SDL2TTF_INCLUDE_DIR = <SDL2_ttf Path>/include`
+* `SDL2TTF_LIBRARY_TEMP = <SDL2_ttf Path>/lib/<Platform>/SDL2_ttf.lib`
+
+Substitute `<SDL2 Path>` and `<SDL2_ttf Path>` for the paths where you unpacked the libraries to and substitute
+`<Platform>` for either `x86` or `x64` for 32- and 64-Bit-Systems respectively.
+
+Afterwards, a Visual Studio project is created at the path specified earlier which you can open and finally build after
+setting `tetris` as the Startup Project in the Solution Explorer. After building, you have to manually copy
+
+* `SDL2.dll`
+* `SDL2_ttf.dll`
+* `libfreetype-6.dll`
+* `zlib1.dll`
+* `fonts`-Folder
+
+to the game executable's location.
+
+# Code Details
 ## Pieces
 Internally, all pieces are identified by their color.
 
