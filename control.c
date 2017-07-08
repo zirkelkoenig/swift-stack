@@ -114,7 +114,6 @@ int process_lock(State *state)
 		last_clear = 0;
 	}
 	state->phase_counter = 0;
-	//log_info("phase = %s", (rc > 0) ? "CLEARING" : "LOADING");
 
 	return rc;
 
@@ -188,9 +187,6 @@ int process(State *state, Input_Map *input)
 			state->phase = DROPPING;
 			state->phase_counter = 0;
 			state->drop_counter = 0;
-			//log_info("level = %d", state->level);
-			//log_info("gravity = %d", state->timing.gravity);
-			//log_info("phase = DROPPING");
 		}
 		break;
 
@@ -213,16 +209,12 @@ int process(State *state, Input_Map *input)
 
 		double pull = 1.0 / (state->timing.gravity / 256.0);
 		int down = state->phase_counter / pull - state->drop_counter;
-		//log_info("pull = %f", pull);
-		//log_info("down = %d", down);
 		rc = drop(state, down);
-		//log_info("drop = %d", rc);
 		check(rc >= 0, "\"drop\" returned an error");
 		state->drop_counter += down;
 		if (rc < 2) {
 			state->phase = LOCKING;
 			state->phase_counter = 0;
-			//log_info("phase = LOCKING");
 			break;
 		}
 
@@ -239,7 +231,6 @@ int process(State *state, Input_Map *input)
 			check(rc >= 0, "\"drop\" returned an error");
 			state->phase = LOCKING;
 			state->phase_counter = 0;
-			//log_info("phase = LOCKING");
 			break;
 		}
 
@@ -264,7 +255,6 @@ int process(State *state, Input_Map *input)
 		check(rc >= 0, "\"process_shift\" returned an error");
 
 		rc = drop(state, 20);
-		//log_info("drop = %d", rc);
 		check(rc >= 0, "\"drop\" returned an error");
 		if (rc > 0) {
 			state->phase_counter = 0;
@@ -300,7 +290,6 @@ int process(State *state, Input_Map *input)
 
 			state->phase = LOADING;
 			state->phase_counter = 0;
-			//log_info("phase = LOADING");
 		}
 		break;
 	}

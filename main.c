@@ -178,7 +178,6 @@ int main(int argc, char *argv[])
 		check_sdl(sdl_rc == 0);
 
 		SDL_RenderPresent(renderer);
-		//print_field(game);
 		SDL_Delay(16);
 	}
 
@@ -226,28 +225,4 @@ error:
 	TTF_Quit();
 	SDL_Quit();
 	return 1;
-}
-
-void print_field(State *state)
-{
-	check(state, "argument \"state\" uninitialized");
-
-	int i = 0;
-	int j = 0;
-
-	for (i = 0; i != 23; i++) {
-		for (j = 0; j != 10; j++) {
-			int color = state->field[j][22 - i];
-			if (color == EMPTY) {
-				putchar('.');
-			} else {
-				putchar('#');
-			}
-		}
-		putchar('\n');
-	}
-	putchar('\n');
-
-error:
-	; // do nothing
 }

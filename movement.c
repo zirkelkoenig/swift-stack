@@ -209,7 +209,6 @@ int drop(State *state, int speed)
 	check(state, "argument \"state\" uninitialized");
 	check(speed >= 0, "argument \"speed\" is less than 0");
 
-	//log_info("drop speed = %d", speed);
 	if (speed == 0) {
 		return 2;
 	}
@@ -367,7 +366,6 @@ int spawn(State *state)
 	}
 
 	int rc = check_collision(state);
-	//log_info("spawn collision = %d", rc);
 	check(rc >= 0, "\"check_collision\" returned an error");
 	return !rc;
 
