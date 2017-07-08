@@ -78,6 +78,8 @@ controls that it requires.
 Currently, the internal timings reflect those of TGM2's Master Mode, sans the time requirements and invisible/fading
 credit roll.
 
+If you can think of a cool name for this project, please hit me up.
+
 # Code Details
 ## Pieces
 Internally, all pieces are identified by their color.
