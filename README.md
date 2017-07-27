@@ -42,7 +42,7 @@ collisions.
 Install the SDL and SDL_ttf development libraries and the CMake build system via your package manager, then run `cmake`
 and `make` to build the game.
 
-To run, the directory `fonts` needs to be located in the same directory as the game executable. `make install` is not
+To run, the directory `font` needs to be located in the same directory as the game executable. `make install` is not
 implemented yet.
 
 ## Windows (Visual Studio)
@@ -65,7 +65,7 @@ setting `tetris` as the Startup Project in the Solution Explorer. After building
 * `SDL2_ttf.dll`
 * `libfreetype-6.dll`
 * `zlib1.dll`
-* `fonts`-Folder
+* `font`-Folder
 
 to the game executable's location.
 
