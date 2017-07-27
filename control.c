@@ -187,7 +187,7 @@ int process(State *state, Input_Map *input)
 				check(rot_rc[1] >= 0, "\"rotate\" returned an error");
 			}
 			if (input->rot_right) {
-				rot_rc[2] = rotate(state, -1);
+				rot_rc[2] = rotate(state, 1);
 				check(rot_rc[2] >= 0, "\"rotate\" returned an error");
 			}
 
