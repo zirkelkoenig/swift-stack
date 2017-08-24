@@ -22,6 +22,10 @@ int last_rot_left_b = 0;
 int last_rot_right = 0;
 int last_clear = 0;
 
+int process_rotate(State *state, int left_a, int left_b, int right);
+int process_shift(State *state, int direction, int dummy);
+int process_lock(State *state);
+
 State *init_state()
 {
 	State *state = malloc(sizeof(State));
@@ -67,78 +71,9 @@ error:
 	;// do nothing
 }
 
-int process_shift(State *state, Input_Map *input, int direction)
-{
-	check(state, "argument \"state\" uninitialized");
-	check(input, "argument \"input\" uninitialized");
-
-	int rc = 0;
-
-	if (direction) {
-		if (direction == last_direction) {
-			if (state->shift_counter >= state->timing.shift) {
-				rc = shift(state, direction);
-				check(rc >= 0, "\"shift\" returned an error");
-			} else {
-				state->shift_counter++;
-			}
-		} else {
-			rc = shift(state, direction);
-			check(rc >= 0, "\"shift\" returned an error");
-			state->shift_counter = 1;
-		}
-	} else {
-		state->shift_counter = 0;
-	}
-
-	return rc;
-
-error:
-	if (rc < 0) {
-		return rc;
-	}
-	return -2;
-}
-
-int process_lock(State *state)
-{
-	check(state, "argument \"state\" uninitialized");
-
-	int rc = lock(state);
-	check(rc >= 0, "\"lock\" returned an error");
-
-	if ((state->level % 100) != 99 && state->level != 998) {
-		state->level++;
-		Timing *new_timing = get_timings(state->level);
-		if (new_timing) {
-			state->timing = *new_timing;
-			free(new_timing);
-		}
-	}
-
-	rc = clear(state);
-	check(rc >= 0, "\"clear\" returned an error");
-
-	if (rc > 0) {
-		state->phase = CLEARING;
-		last_clear = 1;
-	} else {
-		state->phase = LOADING;
-		last_clear = 0;
-	}
-	state->phase_counter = 0;
-
-	return rc;
-
-error:
-	if (rc < 0) {
-		return rc;
-	}
-	return -2;
-}
-
 int process(State *state, Input_Map *input)
 {
+	int rc = 0;
 	check(state, "argument \"state\" uninitialized");
 	check(state, "argument \"input\" uninitialized");
 
@@ -151,7 +86,6 @@ int process(State *state, Input_Map *input)
 		input->down = 0;
 	}
 
-	int rc = 0;
 	int cur_direction = 0;
 	if (input->left) {
 		cur_direction = -1;
@@ -161,65 +95,49 @@ int process(State *state, Input_Map *input)
 
 	switch (state->phase) {
 	case LOADING:
-		if (cur_direction) {
-			if (cur_direction == last_direction) {
-				state->shift_counter++;
-			} else {
-				state->shift_counter = 1;
-			}
-		} else {
-			state->shift_counter = 0;
-		}
-
 		state->phase_counter++;
+
+		// shift
+		rc = process_shift(state, cur_direction, 1);
+		check(rc >= 0, "\"process_shift\" returned an error");
+
+		// spawn & initial rotation
 		int phase_end = last_clear ? state->timing.load_clear : state->timing.load;
 		if (state->phase_counter == phase_end) {
+			int spawn_success = 0;
 			rc = spawn(state);
 			check(rc >= 0, "\"spawn\" returned an error");
+			spawn_success += rc;
 
-			int rot_rc[] = { 0, 0, 0 };
-			if (input->rot_left_a) {
-				rot_rc[0] = rotate(state, -1);
-				check(rot_rc[0] >= 0, "\"rotate\" returned an error");
-			}
-			if (input->rot_left_b) {
-				rot_rc[1] = rotate(state, -1);
-				check(rot_rc[1] >= 0, "\"rotate\" returned an error");
-			}
-			if (input->rot_right) {
-				rot_rc[2] = rotate(state, 1);
-				check(rot_rc[2] >= 0, "\"rotate\" returned an error");
-			}
+			rc = process_rotate(state, input->rot_left_a, input->rot_left_b, input->rot_right);
+			check(rc >= 0, "\"process_rotate\" returned an error");
+			spawn_success += rc;
 
-			if (rc == 0) {
-				if (rot_rc[0] == 0 && rot_rc[1] == 0 && rot_rc[2] == 0) {
-					return 0;
-				}
+			if (spawn_success) {
+				state->phase = DROPPING;
+				state->phase_counter = 0;
+				state->drop_counter = 0;
+			} else {
+				return 0;
 			}
-
-			state->phase = DROPPING;
-			state->phase_counter = 0;
-			state->drop_counter = 0;
 		}
 		break;
 
 	case DROPPING:
-		if (input->rot_left_a && !last_rot_left_a) {
-			rc = rotate(state, -1);
-			check(rc >= 0, "\"rotate\" returned an error");
-		}
-		if (input->rot_left_b && !last_rot_left_b) {
-			rc = rotate(state, -1);
-			check(rc >= 0, "\"rotate\" returned an error");
-		}
-		if (input->rot_right && !last_rot_right) {
-			rc = rotate(state, 1);
-			check(rc >= 0, "\"rotate\" returned an error");
-		}
+		state->phase_counter++;
 
-		rc = process_shift(state, input, cur_direction);
+		// rotation
+		rc = process_rotate(state,
+				input->rot_left_a && !last_rot_left_a,
+				input->rot_left_b && !last_rot_left_b,
+				input->rot_right && !last_rot_right);
+		check(rc >= 0, "\"process_rotate\" returned an error");
+
+		// shift
+		rc = process_shift(state, cur_direction, state->phase_counter == 1);
 		check(rc >= 0, "\"process_shift\" returned an error");
 
+		// gravity
 		double pull = 1.0 / (state->timing.gravity / 256.0);
 		int down = state->phase_counter / pull - state->drop_counter;
 		rc = drop(state, down);
@@ -231,58 +149,53 @@ int process(State *state, Input_Map *input)
 			break;
 		}
 
+		// soft drop & sonic drop
 		if (input->down) {
 			rc = drop(state, 1);
 			check(rc >= 0, "\"drop\" returned an error");
 			if (rc < 2) {
 				rc = process_lock(state);
 				check(rc >= 0, "\"process_lock\" returned an error");
-				break;
 			}
 		} else if (input->up) {
 			rc = drop(state, 20);
 			check(rc >= 0, "\"drop\" returned an error");
 			state->phase = LOCKING;
 			state->phase_counter = 0;
-			break;
 		}
-
-		state->phase_counter++;
 		break;
 
 	case LOCKING:
-		if (input->rot_left_a && !last_rot_left_a) {
-			rc = rotate(state, -1);
-			check(rc >= 0, "\"rotate\" returned an error");
-		}
-		if (input->rot_left_b && !last_rot_left_b) {
-			rc = rotate(state, -1);
-			check(rc >= 0, "\"rotate\" returned an error");
-		}
-		if (input->rot_right && !last_rot_right) {
-			rc = rotate(state, 1);
-			check(rc >= 0, "\"rotate\" returned an error");
-		}
+		state->phase_counter++;
 
-		rc = process_shift(state, input, cur_direction);
+		// rotation
+		rc = process_rotate(state,
+				input->rot_left_a && !last_rot_left_a,
+				input->rot_left_b && !last_rot_left_b,
+				input->rot_right && !last_rot_right);
+		check(rc >= 0, "\"process_rotate\" returned an error");
+
+		// shift
+		rc = process_shift(state, cur_direction, 0);
 		check(rc >= 0, "\"process_shift\" returned an error");
 
+		// gravity
 		rc = drop(state, 20);
 		check(rc >= 0, "\"drop\" returned an error");
 		if (rc > 0) {
 			state->phase_counter = 0;
 		}
 
-		state->phase_counter++;
+		// soft (locking) drop & delay locking
 		if (input->down || state->phase_counter == state->timing.lock) {
 			rc = process_lock(state);
 			check(rc >= 0, "\"process_lock\" returned an error");
-			break;
 		}
 		break;
 
 	case CLEARING:
 		state->phase_counter++;
+
 		if (state->phase_counter == state->timing.clear) {
 			rc = destroy(state);
 			check(rc >= 0, "\"destroy\" returned an error");
@@ -296,6 +209,7 @@ int process(State *state, Input_Map *input)
 					free(new_timing);
 				}
 			}
+
 			if (state->level >= 999) {
 				state->level = 999;
 				return 2;
@@ -312,6 +226,113 @@ int process(State *state, Input_Map *input)
 	last_rot_left_b = input->rot_left_b;
 	last_rot_right = input->rot_right;
 	return 1;
+
+error:
+	if (rc < 0) {
+		return rc;
+	}
+	return -2;
+}
+
+/*
+> 0 - success
+0 - fail (collision)
+*/
+int process_rotate(State *state, int left_a, int left_b, int right)
+{
+	int rc = 0;
+	check(state, "argument \"state\" uninitialized");
+
+	int result = 0;
+	if (left_a) {
+		rc = rotate(state, -1);
+		check(rc >= 0, "\"rotate\" returned an error");
+		result += rc;
+	}
+	if (left_b) {
+		rc = rotate(state, -1);
+		check(rc >= 0, "\"rotate\" returned an error");
+		result += rc;
+	}
+	if (right) {
+		rc = rotate(state, 1);
+		check(rc >= 0, "\"rotate\" returned an error");
+		result += rc;
+	}
+
+	return result;
+
+error:
+	if (rc < 0) {
+		return rc;
+	}
+	return -2;
+}
+
+/*
+dummy - only handle shift counter, do not actually shift
+*/
+int process_shift(State *state, int direction, int dummy)
+{
+	int rc = 0;
+	check(state, "argument \"state\" uninitialized");
+
+	if (direction) {
+		if (direction == last_direction) {
+			if (!dummy && state->shift_counter >= state->timing.shift) {
+				rc = shift(state, direction);
+				check(rc >= 0, "\"shift\" returned an error");
+			}
+			state->shift_counter++;
+		} else {
+			if (!dummy) {
+				rc = shift(state, direction);
+				check(rc >= 0, "\"shift\" returned an error");
+			}
+			state->shift_counter = 1;
+		}
+	} else {
+		state->shift_counter = 0;
+	}
+
+	return 0;
+
+error:
+	if (rc < 0) {
+		return rc;
+	}
+	return -2;
+}
+
+int process_lock(State *state)
+{
+	int rc = 0;
+	check(state, "argument \"state\" uninitialized");
+
+	rc = lock(state);
+	check(rc >= 0, "\"lock\" returned an error");
+
+	if ((state->level % 100) != 99 && state->level != 998) {
+		state->level++;
+		Timing *new_timing = get_timings(state->level);
+		if (new_timing) {
+			state->timing = *new_timing;
+			free(new_timing);
+		}
+	}
+
+	rc = clear(state);
+	check(rc >= 0, "\"clear\" returned an error");
+	if (rc > 0) {
+		state->phase = CLEARING;
+		last_clear = 1;
+	} else {
+		state->phase = LOADING;
+		last_clear = 0;
+	}
+
+	state->phase_counter = 0;
+	return 0;
 
 error:
 	if (rc < 0) {
