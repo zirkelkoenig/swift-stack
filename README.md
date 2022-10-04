@@ -1,3 +1,6 @@
+# Note
+I've mostly stopped playing video games and my interest in continuing this project is pretty low, so I will archive the repo for now.
+
 # Play Instructions
 The goal of the game is to reach level 999, with each piece placement and each line cleared counting as one level. Each
 100 levels make up a section. To cross a section boundary (for example to go from level 199 to 200), you have to clear
